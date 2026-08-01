@@ -11,7 +11,7 @@ export function isOut(item) {
 export async function fetchItems(branchId) {
   const { data, error } = await supabase
     .from('items')
-    .select('id, balance, reorder_point, catalog(name, unit)')
+    .select('id, catalog_id, balance, reorder_point, catalog(name, unit)')
     .eq('branch_id', branchId)
     .order('catalog(name)')
   if (error) throw error
@@ -62,7 +62,7 @@ export async function fetchBranches() {
 export async function fetchAllItems() {
   const { data, error } = await supabase
     .from('items')
-    .select('id, branch_id, balance, reorder_point, catalog(name, unit)')
+    .select('id, branch_id, catalog_id, balance, reorder_point, catalog(name, unit)')
     .limit(1000)
   if (error) throw error
   return (data ?? []).map((r) => ({ ...r, balance: Number(r.balance) }))

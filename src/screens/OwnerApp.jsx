@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fetchAllItems, fetchBranches, fetchTransactions, fmtDate, isLow } from '../lib/data'
 import { LANGS, useT } from '../lib/i18n'
+import DailyUsage from './DailyUsage'
 
 function txLabel(t, tx) {
   const note = tx.note ?? ''
@@ -20,6 +21,7 @@ export default function OwnerApp() {
   const [filter, setFilter] = useState('all')
   const [item, setItem] = useState(null)
   const [txs, setTxs] = useState(null)
+  const [showUsage, setShowUsage] = useState(false)
 
   useEffect(() => {
     fetchBranches().then(setBranches)
@@ -33,6 +35,21 @@ export default function OwnerApp() {
   }, [item])
 
   const lowCount = (bid) => items.filter((i) => i.branch_id === bid && isLow(i)).length
+
+  if (showUsage) {
+    return (
+      <div className="app-wrap">
+        <main className="app-body">
+          <div className="screen">
+            <button className="btn-back" onClick={() => setShowUsage(false)}>{t('back')}</button>
+            <h1 className="h1">{t('usage.title')}</h1>
+            <DailyUsage branches={branches} />
+            <p className="sub center">👁️ {t('own.view')}</p>
+          </div>
+        </main>
+      </div>
+    )
+  }
 
   if (item) {
     return (
@@ -135,6 +152,10 @@ export default function OwnerApp() {
             )
           })}
           <p className="sub center">{t('own.hint')}</p>
+
+          <button className="btn-big btn-transfer" onClick={() => setShowUsage(true)}>
+            {t('adm.usage')}
+          </button>
 
           <div className="me-card">
             <b>🌐 {t('me.language')}</b>

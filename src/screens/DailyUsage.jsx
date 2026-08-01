@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchDailyUsage, todayBangkok } from '../lib/data'
+import { fetchDailyUsage, fmtDate, todayBangkok } from '../lib/data'
 import { useT } from '../lib/i18n'
 
 export default function DailyUsage({ branches }) {
@@ -21,14 +21,13 @@ export default function DailyUsage({ branches }) {
     const lines = [`${t('usage.title')} ${dateLabel}`, '']
     for (const b of [...branches].sort((a, c) => a.name.localeCompare(c.name))) {
       lines.push(`🏨 ${b.name}`)
-      const items = byBranch?.[b.id]
-      if (!items || Object.keys(items).length === 0) {
+      const entries = byBranch?.[b.id]
+      if (!entries || entries.length === 0) {
         lines.push(`• ${t('usage.none')}`)
       } else {
-        for (const name of Object.keys(items).sort()) {
-          const { qty, unit } = items[name]
-          const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
-          lines.push(`• ${name} ${q} ${unit}`)
+        for (const e of entries) {
+          const q = e.qty === Math.round(e.qty) ? e.qty : e.qty.toFixed(1)
+          lines.push(`• ${e.name} ${q} ${e.unit}${e.note ? ` — ${e.note}` : ''}`)
         }
       }
       lines.push('')
@@ -59,23 +58,27 @@ export default function DailyUsage({ branches }) {
 
       {byBranch === null && <p className="sub">{t('item.loading')}</p>}
       {byBranch && [...branches].sort((a, b) => a.name.localeCompare(b.name)).map((b) => {
-        const items = byBranch[b.id]
+        const entries = byBranch[b.id]
         return (
           <div key={b.id}>
             <p className="sub" style={{ margin: '0 0 6px', fontWeight: 700 }}>🏨 {b.name}</p>
-            {!items || Object.keys(items).length === 0 ? (
+            {!entries || entries.length === 0 ? (
               <p className="sub" style={{ marginLeft: 4 }}>{t('usage.none')}</p>
             ) : (
-              Object.keys(items).sort().map((name) => {
-                const { qty, unit } = items[name]
-                const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
-                return (
-                  <div className="item-row" key={name} style={{ cursor: 'default', marginBottom: 6 }}>
-                    <span className="item-name">{name}</span>
-                    <span className="item-bal">{q} {unit}</span>
-                  </div>
-                )
-              })
+              entries.map((e, i) => (
+                <div className="tx-row" key={i}>
+                  <span className="tx-ic tx-out">−</span>
+                  <span className="tx-body">
+                    <span className="tx-name">
+                      {e.name} <b className="tx-qty">{e.qty} {e.unit}</b>
+                    </span>
+                    <span className="tx-meta">
+                      {fmtDate(e.time)} · {t('by')} {e.author ?? 'system'}
+                    </span>
+                    {e.note && <span className="tx-note">📝 {e.note}</span>}
+                  </span>
+                </div>
+              ))
             )}
           </div>
         )

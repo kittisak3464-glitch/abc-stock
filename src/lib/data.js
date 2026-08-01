@@ -158,28 +158,36 @@ export function todayBangkok() {
 
 // Real usage only: Stock Out entries, excludes transfers/loans (transfer_id
 // set) and legacy migrated corrections (no created_by — see migrate script).
+// Returns { [branchId]: [{ name, unit, qty, note, author, time }, ...] } —
+// one line per transaction (not summed), so each recorded note stays visible.
 export async function fetchDailyUsage(dateStr) {
   const { start, end } = bangkokDayRange(dateStr)
   const { data, error } = await supabase
     .from('transactions')
-    .select('qty, items!inner(branch_id, catalog(name, unit))')
+    .select(
+      'qty, note, created_at, items!inner(branch_id, catalog(name, unit)), ' +
+        'author:profiles!transactions_created_by_fkey(display_name)'
+    )
     .eq('type', 'out')
     .eq('voided', false)
     .is('transfer_id', null)
     .not('created_by', 'is', null)
     .gte('created_at', start)
     .lt('created_at', end)
+    .order('created_at')
   if (error) throw error
 
   const byBranch = {}
   for (const row of data ?? []) {
     const bid = row.items.branch_id
-    const name = row.items.catalog.name
-    const unit = row.items.catalog.unit
-    const bucket = (byBranch[bid] ??= {})
-    const cur = bucket[name] ?? { qty: 0, unit }
-    cur.qty += Number(row.qty)
-    bucket[name] = cur
+    ;(byBranch[bid] ??= []).push({
+      name: row.items.catalog.name,
+      unit: row.items.catalog.unit,
+      qty: Number(row.qty),
+      note: row.note,
+      author: row.author?.display_name ?? null,
+      time: row.created_at,
+    })
   }
   return byBranch
 }

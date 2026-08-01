@@ -14,6 +14,7 @@ import Transfer from './screens/Transfer'
 import Incoming from './screens/Incoming'
 import Loans from './screens/Loans'
 import LowStock from './screens/LowStock'
+import DailyUsage from './screens/DailyUsage'
 import Admin from './screens/Admin'
 import OwnerApp from './screens/OwnerApp'
 import './App.css'
@@ -165,6 +166,8 @@ function MainApp({ profile, branch, userId, email }) {
     )
   } else if (overlay?.kind === 'lowstock') {
     body = <LowStock allItems={allItems} branches={branches} onCancel={() => setOverlay(null)} />
+  } else if (overlay?.kind === 'usage') {
+    body = <DailyUsage branches={branches} onExit={() => setOverlay(null)} />
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}
@@ -173,7 +176,8 @@ function MainApp({ profile, branch, userId, email }) {
         onGoLow={() => { if (isAdmin) setOverlay({ kind: 'lowstock' }); else { setStockFilter('low'); setTab('stock') } }}
         onTransfer={() => setOverlay({ kind: 'transfer' })}
         onIncoming={() => setOverlay({ kind: 'incoming' })}
-        onLoans={() => setOverlay({ kind: 'loans' })} />
+        onLoans={() => setOverlay({ kind: 'loans' })}
+        onUsage={() => setOverlay({ kind: 'usage' })} />
     )
   } else if (tab === 'stock') {
     body = (

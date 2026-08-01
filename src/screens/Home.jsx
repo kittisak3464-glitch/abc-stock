@@ -29,7 +29,9 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
         </button>
       )}
 
-      <button className="btn-big btn-in" onClick={() => onAction('in')}>📥 Stock In</button>
+      {profile.role === 'admin' && (
+        <button className="btn-big btn-in" onClick={() => onAction('in')}>📥 Stock In</button>
+      )}
       <button className="btn-big btn-out" onClick={() => onAction('out')}>📤 Stock Out</button>
       <div className="row-2btn">
         <button className="btn-big btn-transfer" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onTransfer}>

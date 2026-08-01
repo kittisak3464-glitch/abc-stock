@@ -44,10 +44,14 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
         )}
       </div>
 
-      <div className="row-2btn">
-        <button className="btn-big btn-in" onClick={() => onAction('in', item)}>📥 In</button>
+      {isAdmin ? (
+        <div className="row-2btn">
+          <button className="btn-big btn-in" onClick={() => onAction('in', item)}>📥 In</button>
+          <button className="btn-big btn-out" onClick={() => onAction('out', item)}>📤 Out</button>
+        </div>
+      ) : (
         <button className="btn-big btn-out" onClick={() => onAction('out', item)}>📤 Out</button>
-      </div>
+      )}
 
       <p className="sub" style={{ marginBottom: 0 }}>History</p>
       {txs === null && <p className="sub">Loading…</p>}

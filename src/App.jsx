@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { supabase } from './lib/supabase'
+import { I18nContext, getSavedLang, makeT, saveLang, useT } from './lib/i18n'
 import {
   fetchAllItems, fetchBranches, fetchItems, fetchTransactions, fetchTransfers, undoTransaction,
 } from './lib/data'
@@ -18,6 +19,7 @@ import OwnerApp from './screens/OwnerApp'
 import './App.css'
 
 function Login() {
+  const { t } = useT()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
@@ -28,7 +30,7 @@ function Login() {
     setBusy(true)
     setError('')
     const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) setError('Wrong email or password — try again')
+    if (error) setError(t('login.error'))
     setBusy(false)
   }
 
@@ -39,14 +41,14 @@ function Login() {
           <span className="appmark-dot">📦</span>
           <span>ABC Stock</span>
         </div>
-        <p className="login-sub">ABC Hotels Inventory</p>
-        <input type="email" placeholder="Email" autoComplete="username"
+        <p className="login-sub">{t('login.sub')}</p>
+        <input type="email" placeholder={t('login.email')} autoComplete="username"
           value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <input type="password" placeholder="Password" autoComplete="current-password"
+        <input type="password" placeholder={t('login.password')} autoComplete="current-password"
           value={password} onChange={(e) => setPassword(e.target.value)} required />
         {error && <div className="login-error">{error}</div>}
-        <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign In'}</button>
-        <p className="login-hint">Forgot password? Contact admin</p>
+        <button type="submit" disabled={busy}>{busy ? t('login.signingIn') : t('login.signIn')}</button>
+        <p className="login-hint">{t('login.hint')}</p>
       </form>
     </div>
   )
@@ -55,6 +57,7 @@ function Login() {
 const UNDO_WINDOW_MS = 5 * 60 * 1000
 
 function MainApp({ profile, branch, userId, email }) {
+  const { t } = useT()
   const isAdmin = profile.role === 'admin'
   const [branches, setBranches] = useState([])
   const [branchId, setBranchId] = useState(profile.branch_id)
@@ -65,8 +68,6 @@ function MainApp({ profile, branch, userId, email }) {
   const [txs, setTxs] = useState(null)
   const [transfers, setTransfers] = useState([])
   const [overlay, setOverlay] = useState(null)
-  // overlay: {kind:'item',item} | {kind:'record',type,item?} | {kind:'transfer'} |
-  //          {kind:'incoming'} | {kind:'loans'} | {kind:'lowstock'}
   const [toast, setToast] = useState(null)
 
   useEffect(() => {
@@ -87,9 +88,9 @@ function MainApp({ profile, branch, userId, email }) {
 
   useEffect(reload, [reload])
 
-  const incoming = transfers.filter((t) => t.status === 'in_transit' && (isAdmin || t.to_branch === branchId))
-  const loans = transfers.filter((t) => t.status === 'pending_return')
-  const resolvedLoans = transfers.filter((t) => t.kind === 'loan' && ['returned', 'waived'].includes(t.status)).slice(0, 10)
+  const incoming = transfers.filter((t2) => t2.status === 'in_transit' && (isAdmin || t2.to_branch === branchId))
+  const loans = transfers.filter((t2) => t2.status === 'pending_return')
+  const resolvedLoans = transfers.filter((t2) => t2.kind === 'loan' && ['returned', 'waived'].includes(t2.status)).slice(0, 10)
 
   const canUndo = useCallback(
     (tx) =>
@@ -102,7 +103,7 @@ function MainApp({ profile, branch, userId, email }) {
   async function handleUndo(tx) {
     try {
       await undoTransaction(tx.id)
-      setToast({ text: 'Entry undone ✓' })
+      setToast({ text: t('undo.done') })
       reload()
       if (overlay?.kind === 'item') {
         const fresh = await fetchItems(branchId)
@@ -122,8 +123,8 @@ function MainApp({ profile, branch, userId, email }) {
 
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(null), 6000)
-    return () => clearTimeout(t)
+    const timer = setTimeout(() => setToast(null), 6000)
+    return () => clearTimeout(timer)
   }, [toast])
 
   const curBranch = branches.find((b) => b.id === branchId) ?? branch
@@ -132,7 +133,7 @@ function MainApp({ profile, branch, userId, email }) {
   if (overlay?.kind === 'record') {
     body = (
       <Record type={overlay.type} presetItem={overlay.item} items={items} userId={userId}
-        onDone={(txId, item, qty) => done(`Saved ✓ ${item.catalog.name} ${overlay.type === 'in' ? '+' : '−'}${qty}`, txId)}
+        onDone={(txId, item, qty) => done(`${t('toast.saved')} ${item.catalog.name} ${overlay.type === 'in' ? '+' : '−'}${qty}`, txId)}
         onCancel={() => setOverlay(overlay.item ? { kind: 'item', item: overlay.item } : null)} />
     )
   } else if (overlay?.kind === 'item' && overlay.item) {
@@ -140,7 +141,8 @@ function MainApp({ profile, branch, userId, email }) {
       <ItemDetail item={overlay.item} isAdmin={isAdmin}
         onBack={() => setOverlay(null)}
         onAction={(type, item) => setOverlay({ kind: 'record', type, item })}
-        canUndo={canUndo} onUndo={handleUndo} onReorderSaved={() => { reload(); setToast({ text: 'Reorder point saved ✓' }) }} />
+        canUndo={canUndo} onUndo={handleUndo}
+        onReorderSaved={() => { reload(); setToast({ text: t('toast.reorder') }) }} />
     )
   } else if (overlay?.kind === 'transfer') {
     body = (
@@ -183,11 +185,11 @@ function MainApp({ profile, branch, userId, email }) {
   }
 
   const tabs = [
-    ['home', '🏠', 'Home'],
-    ['stock', '📋', 'Stock'],
-    ['history', '🕘', 'History'],
-    ...(isAdmin ? [['admin', '👑', 'Admin']] : []),
-    ['me', '👤', 'Me'],
+    ['home', '🏠', t('nav.home')],
+    ['stock', '📋', t('nav.stock')],
+    ['history', '🕘', t('nav.history')],
+    ...(isAdmin ? [['admin', '👑', t('nav.admin')]] : []),
+    ['me', '👤', t('nav.me')],
   ]
 
   return (
@@ -214,7 +216,7 @@ function MainApp({ profile, branch, userId, email }) {
           {toast.txId && (
             <button className="toast-undo"
               onClick={() => { handleUndo({ id: toast.txId, voided: false, created_by: userId, created_at: new Date().toISOString() }); setToast(null) }}>
-              Undo
+              {t('undo')}
             </button>
           )}
         </div>
@@ -236,6 +238,7 @@ function MainApp({ profile, branch, userId, email }) {
 export default function App() {
   const [session, setSession] = useState(undefined)
   const [profile, setProfile] = useState(null)
+  const [lang, setLangState] = useState(getSavedLang())
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSession(data.session))
@@ -250,15 +253,32 @@ export default function App() {
       .select('display_name, role, branch_id, lang, branches(id, name, code, procurement_group)')
       .eq('user_id', session.user.id)
       .single()
-      .then(({ data }) => data && setProfile(data))
+      .then(({ data }) => {
+        if (data) {
+          setProfile(data)
+          setLangState(data.lang)
+          saveLang(data.lang)
+        }
+      })
   }, [session])
 
-  if (session === undefined) return null
-  if (!session) return <Login />
-  if (!profile) return null
-  if (profile.role === 'owner') return <OwnerApp key={session.user.id} profile={profile} />
-  return (
+  const setLang = useCallback((l) => {
+    setLangState(l)
+    saveLang(l)
+    if (session) supabase.rpc('set_my_lang', { p_lang: l }).then(() => {})
+  }, [session])
+
+  const i18n = useMemo(() => ({ lang, t: makeT(lang), setLang }), [lang, setLang])
+
+  let content
+  if (session === undefined) content = null
+  else if (!session) content = <Login />
+  else if (!profile) content = null
+  else if (profile.role === 'owner') content = <OwnerApp key={session.user.id} profile={profile} />
+  else content = (
     <MainApp key={session.user.id} profile={profile} branch={profile.branches}
       userId={session.user.id} email={session.user.email} />
   )
+
+  return <I18nContext.Provider value={i18n}>{content}</I18nContext.Provider>
 }

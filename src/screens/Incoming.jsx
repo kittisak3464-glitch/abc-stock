@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { fmtDate, signedRpc } from '../lib/data'
+import { useT } from '../lib/i18n'
 
 export default function Incoming({ transfers, branches, myEmail, onDone, onCancel }) {
+  const { t } = useT()
   const [openId, setOpenId] = useState(null)
   const [email, setEmail] = useState(myEmail)
   const [password, setPassword] = useState('')
@@ -10,12 +12,12 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
 
   const bname = (id) => branches.find((b) => b.id === id)?.name ?? '?'
 
-  async function receive(t) {
+  async function receive(tr) {
     setBusy(true)
     setError('')
     try {
-      await signedRpc(email, password, 'receive_transfer', { p_transfer_id: t.id })
-      onDone(`Received ✓ ${t.catalog.name} +${t.qty}`)
+      await signedRpc(email, password, 'receive_transfer', { p_transfer_id: tr.id })
+      onDone(`✓ ${tr.catalog.name} +${tr.qty}`)
     } catch (e) {
       setError(e.message)
       setBusy(false)
@@ -24,34 +26,32 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
 
   return (
     <div className="screen">
-      <button className="btn-back" onClick={onCancel}>‹ Back</button>
-      <h1 className="h1 text-transfer">📬 Incoming</h1>
-      {transfers.length === 0 && <p className="sub">Nothing on the way</p>}
-      {transfers.map((t) => (
-        <div className="transit-card" key={t.id}>
-          <div className="transit-tag">🚚 IN TRANSIT{t.kind === 'loan' ? ' · LOAN' : ''}</div>
-          <div className="transit-name">{t.catalog.name} × {t.qty}</div>
+      <button className="btn-back" onClick={onCancel}>{t('back')}</button>
+      <h1 className="h1 text-transfer">{t('inc.title')}</h1>
+      {transfers.length === 0 && <p className="sub">{t('inc.none')}</p>}
+      {transfers.map((tr) => (
+        <div className="transit-card" key={tr.id}>
+          <div className="transit-tag">{t('inc.transit')}{tr.kind === 'loan' ? t('inc.loanTag') : ''}</div>
+          <div className="transit-name">{tr.catalog.name} × {tr.qty}</div>
           <div className="transit-meta">
-            From {bname(t.from_branch)} · sent by {t.sender?.display_name ?? '?'} · {fmtDate(t.sent_at)}
+            {t('inc.meta', { b: bname(tr.from_branch), p: tr.sender?.display_name ?? '?' })} · {fmtDate(tr.sent_at)}
           </div>
-          {openId !== t.id ? (
-            <button className="btn-big btn-in" style={{ marginTop: 10 }} onClick={() => { setOpenId(t.id); setError(''); setPassword('') }}>
-              Confirm Received
+          {openId !== tr.id ? (
+            <button className="btn-big btn-in" style={{ marginTop: 10 }}
+              onClick={() => { setOpenId(tr.id); setError(''); setPassword('') }}>
+              {t('inc.open')}
             </button>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
               <input className="input" type="email" value={email} autoComplete="username"
-                onChange={(e) => setEmail(e.target.value)} placeholder="Receiver email" />
+                onChange={(e) => setEmail(e.target.value)} placeholder={t('inc.email')} />
               <input className="input" type="password" autoFocus autoComplete="current-password"
-                placeholder="🔒 Your password to sign as RECEIVER"
-                value={password} onChange={(e) => setPassword(e.target.value)} />
+                placeholder={t('inc.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
               {error && <div className="alert-danger">{error}</div>}
-              <button className="btn-big btn-in" disabled={busy || !password} onClick={() => receive(t)}>
-                {busy ? 'Confirming…' : `Confirm +${t.qty} ${t.catalog.name}`}
+              <button className="btn-big btn-in" disabled={busy || !password} onClick={() => receive(tr)}>
+                {busy ? t('inc.busy') : t('inc.btn', { n: tr.qty, i: tr.catalog.name })}
               </button>
-              <p className="sub center" style={{ margin: 0 }}>
-                Not received yet? Leave it — nothing is added until you sign
-              </p>
+              <p className="sub center" style={{ margin: 0 }}>{t('inc.wait')}</p>
             </div>
           )}
         </div>

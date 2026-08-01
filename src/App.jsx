@@ -167,7 +167,7 @@ function MainApp({ profile, branch, userId, email }) {
   } else if (overlay?.kind === 'lowstock') {
     body = <LowStock allItems={allItems} branches={branches} onCancel={() => setOverlay(null)} />
   } else if (overlay?.kind === 'usage') {
-    body = <DailyUsage branches={branches} onExit={() => setOverlay(null)} />
+    body = <DailyUsage branches={isAdmin ? branches : curBranch ? [curBranch] : []} onExit={() => setOverlay(null)} />
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}

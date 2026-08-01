@@ -1,0 +1,55 @@
+/* ABC Stock — design tokens (from design doc) */
+
+:root {
+  --bg: #f6f8f6;
+  --surface: #ffffff;
+  --ink: #1f2724;
+  --muted: #5d6963;
+  --line: #e1e7e2;
+  --accent: #136c5e;
+  --accent-ink: #ffffff;
+  --in: #2e7d46;
+  --in-soft: #e3f1e6;
+  --out: #b45309;
+  --out-soft: #fbeedc;
+  --transfer: #3d5a9e;
+  --transfer-soft: #e4eaf6;
+  --danger: #be3b31;
+  --danger-soft: #fae6e4;
+  --shadow: 0 1px 3px rgba(31, 39, 36, 0.08), 0 6px 20px rgba(31, 39, 36, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #131816;
+    --surface: #1c2320;
+    --ink: #e7ece8;
+    --muted: #98a49e;
+    --line: #2b342f;
+    --accent: #4ba593;
+    --accent-ink: #0e1513;
+    --in: #5cb877;
+    --in-soft: #1e3325;
+    --out: #e09a4a;
+    --out-soft: #382915;
+    --transfer: #8aa7e0;
+    --transfer-soft: #1f2839;
+    --danger: #e0776e;
+    --danger-soft: #3a1f1c;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 6px 20px rgba(0, 0, 0, 0.3);
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Leelawadee UI', 'Segoe UI', Tahoma, system-ui, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}

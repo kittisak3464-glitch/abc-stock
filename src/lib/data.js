@@ -1,0 +1,162 @@
+import { supabase } from './supabase'
+
+export function isLow(item) {
+  return item.reorder_point != null && Number(item.balance) <= Number(item.reorder_point)
+}
+
+export function isOut(item) {
+  return Number(item.balance) <= 0
+}
+
+export async function fetchItems(branchId) {
+  const { data, error } = await supabase
+    .from('items')
+    .select('id, balance, reorder_point, catalog(name, unit)')
+    .eq('branch_id', branchId)
+    .order('catalog(name)')
+  if (error) throw error
+  return (data ?? []).map((r) => ({ ...r, balance: Number(r.balance) }))
+}
+
+export async function fetchTransactions({ branchId, itemId, limit = 30 }) {
+  let q = supabase
+    .from('transactions')
+    .select(
+      'id, type, qty, note, created_at, voided, created_by, ' +
+        'items!inner(id, branch_id, catalog(name, unit)), ' +
+        'author:profiles!transactions_created_by_fkey(display_name)'
+    )
+    .order('created_at', { ascending: false })
+    .limit(limit)
+  if (itemId) q = q.eq('item_id', itemId)
+  else if (branchId) q = q.eq('items.branch_id', branchId)
+  const { data, error } = await q
+  if (error) throw error
+  return data ?? []
+}
+
+export async function recordTransaction({ itemId, type, qty, note, userId }) {
+  const { data, error } = await supabase
+    .from('transactions')
+    .insert({ item_id: itemId, type, qty, note: note || null, created_by: userId })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data.id
+}
+
+export async function undoTransaction(txId) {
+  const { error } = await supabase.rpc('void_own_transaction', { tx_id: txId })
+  if (error) throw error
+}
+
+export async function fetchBranches() {
+  const { data, error } = await supabase
+    .from('branches')
+    .select('id, code, name, procurement_group')
+    .order('id')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function fetchAllItems() {
+  const { data, error } = await supabase
+    .from('items')
+    .select('id, branch_id, balance, reorder_point, catalog(name, unit)')
+    .limit(1000)
+  if (error) throw error
+  return (data ?? []).map((r) => ({ ...r, balance: Number(r.balance) }))
+}
+
+export async function fetchTransfers({ statuses, limit = 50 }) {
+  let q = supabase
+    .from('transfers')
+    .select(
+      'id, from_branch, to_branch, qty, kind, status, note, sent_at, received_at, ' +
+        'catalog(name, unit), ' +
+        'sender:profiles!transfers_sent_by_fkey(display_name), ' +
+        'receiver:profiles!transfers_received_by_fkey(display_name)'
+    )
+    .order('id', { ascending: false })
+    .limit(limit)
+  if (statuses) q = q.in('status', statuses)
+  const { data, error } = await q
+  if (error) throw error
+  return (data ?? []).map((r) => ({ ...r, qty: Number(r.qty) }))
+}
+
+// Password-signed RPC: verifies email+password against Supabase Auth with a
+// raw fetch (does NOT touch the logged-in session), then calls the RPC as
+// that user — so sent_by/received_by is a real signature.
+export async function signedRpc(email, password, fn, args) {
+  const url = import.meta.env.VITE_SUPABASE_URL
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY
+  const auth = await fetch(`${url}/auth/v1/token?grant_type=password`, {
+    method: 'POST',
+    headers: { apikey: key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, password }),
+  })
+  if (!auth.ok) throw new Error('Wrong password — signature not accepted')
+  const { access_token } = await auth.json()
+  const res = await fetch(`${url}/rest/v1/rpc/${fn}`, {
+    method: 'POST',
+    headers: { apikey: key, Authorization: `Bearer ${access_token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify(args),
+  })
+  if (!res.ok) {
+    const e = await res.json().catch(() => ({}))
+    throw new Error(e.message ?? 'Request failed')
+  }
+  const text = await res.text()
+  return text ? JSON.parse(text) : null
+}
+
+// ---- admin: catalog & users & reorder ----
+
+export async function fetchCatalog() {
+  const { data, error } = await supabase.from('catalog').select('id, name, unit, active').order('name')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function addCatalogItem(name, unit, branchIds) {
+  const { data, error } = await supabase.from('catalog').insert({ name, unit }).select('id').single()
+  if (error) throw error
+  const rows = branchIds.map((b) => ({ branch_id: b, catalog_id: data.id, balance: 0 }))
+  const { error: e2 } = await supabase.from('items').insert(rows)
+  if (e2) throw e2
+  return data.id
+}
+
+export async function updateCatalogItem(id, patch) {
+  const { error } = await supabase.from('catalog').update(patch).eq('id', id)
+  if (error) throw error
+}
+
+export async function setReorderPoint(itemId, value) {
+  const { error } = await supabase.from('items').update({ reorder_point: value }).eq('id', itemId)
+  if (error) throw error
+}
+
+export async function fetchProfiles() {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('user_id, display_name, role, branch_id, lang')
+    .order('role')
+  if (error) throw error
+  return data ?? []
+}
+
+export async function updateProfile(userId, patch) {
+  const { error } = await supabase.from('profiles').update(patch).eq('user_id', userId)
+  if (error) throw error
+}
+
+export function fmtDate(iso) {
+  const d = new Date(iso)
+  const today = new Date()
+  const sameDay = d.toDateString() === today.toDateString()
+  const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  if (sameDay) return `Today ${time}`
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ` ${time}`
+}

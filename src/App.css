@@ -245,14 +245,25 @@ button.stat { cursor: pointer; }
 
 .btn-back {
   align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
   background: none;
   border: none;
+  border-radius: 10px;
   color: var(--muted);
   font-family: inherit;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
-  padding: 0;
+  padding: 8px 10px;
+  margin: -8px 0 -8px -10px;
+}
+
+.btn-back:hover,
+.btn-back:active {
+  background: var(--line);
+  color: var(--ink);
 }
 
 /* ---------- inputs ---------- */

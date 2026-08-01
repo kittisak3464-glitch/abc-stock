@@ -41,10 +41,7 @@ export default function OwnerApp() {
       <div className="app-wrap">
         <main className="app-body">
           <div className="screen">
-            <button className="btn-back" onClick={() => setShowUsage(false)}>{t('back')}</button>
-            <h1 className="h1">{t('usage.title')}</h1>
-            <DailyUsage branches={branches} />
-            <p className="sub center">👁️ {t('own.view')}</p>
+            <DailyUsage branches={branches} onExit={() => setShowUsage(false)} />
           </div>
         </main>
       </div>

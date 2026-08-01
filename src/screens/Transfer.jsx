@@ -26,6 +26,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
   const crossGroup = from && to && from.procurement_group !== to.procurement_group
 
   async function send() {
+    if (!note.trim()) return setError(t('rec.noteReq'))
     setBusy(true)
     setError('')
     try {
@@ -115,7 +116,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
           <input className="input" type="password" autoComplete="current-password"
             placeholder={t('tr.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <div className="alert-danger">{error}</div>}
-          <button className="btn-big btn-transfer" disabled={busy || !password || qty > Number(item.balance)}
+          <button className="btn-big btn-transfer" disabled={busy || !password || !note.trim() || qty > Number(item.balance)}
             onClick={send}>
             {busy ? t('tr.sending') : t('tr.send', { n: qty, b: to?.name })}
           </button>

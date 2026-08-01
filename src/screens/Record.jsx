@@ -16,6 +16,7 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
   const color = isIn ? 'in' : 'out'
 
   async function save() {
+    if (!note.trim()) return setError(t('rec.noteReq'))
     setBusy(true)
     setError('')
     try {
@@ -91,7 +92,7 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
       {overdraw && <div className="alert-danger">{t('rec.notEnough', { n: Number(item.balance) })}</div>}
       {error && <div className="alert-danger">{error}</div>}
 
-      <button className={'btn-big btn-' + color} disabled={busy || overdraw} onClick={save}>
+      <button className={'btn-big btn-' + color} disabled={busy || overdraw || !note.trim()} onClick={save}>
         {busy ? t('rec.saving') : isIn ? t('rec.inBtn') : t('rec.outBtn')}
       </button>
     </div>

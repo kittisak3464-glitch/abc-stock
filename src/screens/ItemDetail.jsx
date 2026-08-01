@@ -25,6 +25,13 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
     onReorderSaved?.()
   }
 
+  async function clearRp() {
+    await setReorderPoint(item.id, null)
+    setRp('')
+    setEditRp(false)
+    onReorderSaved?.()
+  }
+
   const diff = newBal === '' ? null : Number(newBal) - Number(item.balance)
 
   async function saveAdjust() {
@@ -63,13 +70,19 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
           )}
         </p>
         {isAdmin && editRp && (
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <input className="input" type="number" min="0" style={{ maxWidth: 140 }}
-              placeholder={t('item.ph')} value={rp} onChange={(e) => setRp(e.target.value)} />
-            <button className="btn-undo" onClick={saveRp}>{t('save')}</button>
-            <button className="btn-undo" onClick={() => { setEditRp(false); setRp(item.reorder_point ?? '') }}>
-              {t('cancel')}
-            </button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+            <p className="sub" style={{ margin: 0 }}>{t('item.rpHint')}</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input className="input" type="number" min="0" style={{ maxWidth: 140 }}
+                placeholder={t('item.ph')} value={rp} onChange={(e) => setRp(e.target.value)} />
+              <button className="btn-undo" onClick={saveRp}>{t('save')}</button>
+              {item.reorder_point != null && (
+                <button className="btn-undo" onClick={clearRp}>{t('item.rpClear')}</button>
+              )}
+              <button className="btn-undo" onClick={() => { setEditRp(false); setRp(item.reorder_point ?? '') }}>
+                {t('cancel')}
+              </button>
+            </div>
           </div>
         )}
       </div>

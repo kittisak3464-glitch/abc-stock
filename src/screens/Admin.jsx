@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react'
 import {
   addCatalogItem, fetchCatalog, fetchProfiles, updateCatalogItem, updateProfile,
 } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 import DailyUsage from './DailyUsage'
 
 // Admin tab: catalog (locked names) + users + daily usage report
 export default function Admin({ branches, onChanged }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [view, setView] = useState('catalog') // catalog | users | usage
   const [cat, setCat] = useState([])
   const [profiles, setProfiles] = useState([])
   const [editId, setEditId] = useState(null)
   const [editVal, setEditVal] = useState({})
-  const [newItem, setNewItem] = useState(null) // {name, unit}
+  const [newItem, setNewItem] = useState(null) // {name, unit, th, zh, my}
   const [msg, setMsg] = useState('')
 
   function reload() {
@@ -24,7 +24,13 @@ export default function Admin({ branches, onChanged }) {
 
   async function saveCatalog(c) {
     try {
-      await updateCatalogItem(c.id, { name: editVal.name ?? c.name, unit: editVal.unit ?? c.unit })
+      await updateCatalogItem(c.id, {
+        name: editVal.name ?? c.name,
+        unit: editVal.unit ?? c.unit,
+        name_th: (editVal.name_th ?? c.name_th) || null,
+        name_zh: (editVal.name_zh ?? c.name_zh) || null,
+        name_my: (editVal.name_my ?? c.name_my) || null,
+      })
       setEditId(null); setMsg(t('adm.saved')); reload(); onChanged()
     } catch (e) { setMsg(e.message) }
   }
@@ -36,7 +42,9 @@ export default function Admin({ branches, onChanged }) {
 
   async function addItem() {
     try {
-      await addCatalogItem(newItem.name.trim(), newItem.unit.trim() || 'Piece', branches.map((b) => b.id))
+      await addCatalogItem(newItem.name.trim(), newItem.unit.trim() || 'Piece', branches.map((b) => b.id), {
+        th: newItem.th?.trim(), zh: newItem.zh?.trim(), my: newItem.my?.trim(),
+      })
       setNewItem(null); setMsg(t('adm.added')); reload(); onChanged()
     } catch (e) { setMsg(e.message) }
   }
@@ -72,7 +80,7 @@ export default function Admin({ branches, onChanged }) {
       {view === 'catalog' && (
         <>
           {!newItem ? (
-            <button className="btn-big btn-accent" onClick={() => { setNewItem({ name: '', unit: 'Piece' }); setEditId(null) }}>
+            <button className="btn-big btn-accent" onClick={() => { setNewItem({ name: '', unit: 'Piece', th: '', zh: '', my: '' }); setEditId(null) }}>
               {t('adm.add')}
             </button>
           ) : (
@@ -82,6 +90,12 @@ export default function Admin({ branches, onChanged }) {
                 value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} />
               <input className="input" placeholder={t('adm.unit')}
                 value={newItem.unit} onChange={(e) => setNewItem({ ...newItem, unit: e.target.value })} />
+              <input className="input" placeholder={t('adm.nameTh')}
+                value={newItem.th} onChange={(e) => setNewItem({ ...newItem, th: e.target.value })} />
+              <input className="input" placeholder={t('adm.nameZh')}
+                value={newItem.zh} onChange={(e) => setNewItem({ ...newItem, zh: e.target.value })} />
+              <input className="input" placeholder={t('adm.nameMy')}
+                value={newItem.my} onChange={(e) => setNewItem({ ...newItem, my: e.target.value })} />
               <div className="row-2btn">
                 <button className="btn-big btn-ghost-big" style={{ padding: 10 }} onClick={() => setNewItem(null)}>
                   {t('cancel')}
@@ -100,6 +114,12 @@ export default function Admin({ branches, onChanged }) {
                     onChange={(e) => setEditVal((v) => ({ ...v, name: e.target.value }))} />
                   <input className="input" defaultValue={c.unit}
                     onChange={(e) => setEditVal((v) => ({ ...v, unit: e.target.value }))} />
+                  <input className="input" placeholder={t('adm.nameTh')} defaultValue={c.name_th ?? ''}
+                    onChange={(e) => setEditVal((v) => ({ ...v, name_th: e.target.value }))} />
+                  <input className="input" placeholder={t('adm.nameZh')} defaultValue={c.name_zh ?? ''}
+                    onChange={(e) => setEditVal((v) => ({ ...v, name_zh: e.target.value }))} />
+                  <input className="input" placeholder={t('adm.nameMy')} defaultValue={c.name_my ?? ''}
+                    onChange={(e) => setEditVal((v) => ({ ...v, name_my: e.target.value }))} />
                   <div className="row-2btn">
                     <button className="btn-big btn-ghost-big" style={{ padding: 8, fontSize: '0.8rem' }} onClick={() => setEditId(null)}>
                       {t('cancel')}
@@ -113,6 +133,7 @@ export default function Admin({ branches, onChanged }) {
                 <>
                   <span className="item-name">
                     {c.name}
+                    {secondaryName(c, lang) && <span className="item-secondary">{secondaryName(c, lang)}</span>}
                     <span className="item-unit">{c.unit}{c.active ? '' : ` · ${t('adm.inactive')}`}</span>
                   </span>
                   <button className="btn-undo" onClick={() => { setEditId('c' + c.id); setEditVal({}) }}>{t('edit')}</button>

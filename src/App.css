@@ -344,6 +344,20 @@ button.stat { cursor: pointer; }
   color: var(--muted);
 }
 
+.item-secondary {
+  font-weight: 400;
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+.item-secondary-title {
+  margin: -6px 0 0;
+  font-size: 1rem;
+  font-style: italic;
+  color: var(--muted);
+}
+
 .item-bal {
   font-weight: 800;
   font-size: 1.05rem;

@@ -1,8 +1,8 @@
 import { fmtDate } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function History({ txs, canUndo, onUndo }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   return (
     <div className="screen">
       <h1 className="h1">{t('nav.history')}</h1>
@@ -19,6 +19,9 @@ export default function History({ txs, canUndo, onUndo }) {
               <b className="tx-qty">{tx.type === 'in' ? '+' : '−'}{Number(tx.qty)}</b>
               {tx.voided && <span className="tag-voided">{t('tag.undone')}</span>}
             </span>
+            {secondaryName(tx.items.catalog, lang) && (
+              <span className="item-secondary">{secondaryName(tx.items.catalog, lang)}</span>
+            )}
             <span className="tx-meta">
               {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
             </span>

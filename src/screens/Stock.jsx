@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { isLow, isOut } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Stock({ items, filter, setFilter, onOpenItem }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [search, setSearch] = useState('')
 
   let list = items
@@ -37,6 +37,9 @@ export default function Stock({ items, filter, setFilter, onOpenItem }) {
           onClick={() => onOpenItem(item)}>
           <span className="item-name">
             {item.catalog.name}
+            {secondaryName(item.catalog, lang) && (
+              <span className="item-secondary">{secondaryName(item.catalog, lang)}</span>
+            )}
             <span className="item-unit">{item.catalog.unit}</span>
           </span>
           {isOut(item) ? (

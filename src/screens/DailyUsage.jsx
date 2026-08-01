@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { fetchDailyUsage, fmtDate, todayBangkok } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 function summarize(entries) {
   const totals = {}
   for (const e of entries) {
-    const cur = totals[e.name] ?? { qty: 0, unit: e.unit }
+    const cur = totals[e.name] ?? { qty: 0, unit: e.unit, name_th: e.name_th, name_zh: e.name_zh, name_my: e.name_my }
     cur.qty += e.qty
     totals[e.name] = cur
   }
@@ -14,14 +14,16 @@ function summarize(entries) {
 
 // Detail screen: every recorded entry (with note) for one item on one day
 function ItemUsageDetail({ branchName, name, entries, onBack }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const total = entries.reduce((sum, e) => sum + e.qty, 0)
   const q = total === Math.round(total) ? total : total.toFixed(1)
+  const sec = secondaryName(entries[0], lang)
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <button className="btn-back" onClick={onBack}>{t('back')}</button>
       <div>
         <h1 className="h1">{name}</h1>
+        {sec && <p className="item-secondary-title">{sec}</p>}
         <p className="sub">{branchName} · {q} {entries[0]?.unit}</p>
       </div>
       {entries.map((e, i) => (
@@ -43,7 +45,7 @@ function ItemUsageDetail({ branchName, name, entries, onBack }) {
 }
 
 export default function DailyUsage({ branches, onExit }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [date, setDate] = useState(todayBangkok())
   const [byBranch, setByBranch] = useState(null)
   const [msg, setMsg] = useState('')
@@ -130,10 +132,14 @@ export default function DailyUsage({ branches, onExit }) {
               Object.keys(totals).sort().map((name) => {
                 const { qty, unit } = totals[name]
                 const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
+                const sec = secondaryName(totals[name], lang)
                 return (
                   <button className="item-row" key={name}
                     onClick={() => setOpenItem({ branchId: b.id, branchName: b.name, name })}>
-                    <span className="item-name">{name}</span>
+                    <span className="item-name">
+                      {name}
+                      {sec && <span className="item-secondary">{sec}</span>}
+                    </span>
                     <span className="item-bal">{q} {unit}</span>
                   </button>
                 )

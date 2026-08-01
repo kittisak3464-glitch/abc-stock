@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { fmtDate, signedRpc } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Incoming({ transfers, branches, myEmail, onDone, onCancel }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [openId, setOpenId] = useState(null)
   const [email, setEmail] = useState(myEmail)
   const [password, setPassword] = useState('')
@@ -32,7 +32,12 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
       {transfers.map((tr) => (
         <div className="transit-card" key={tr.id}>
           <div className="transit-tag">{t('inc.transit')}{tr.kind === 'loan' ? t('inc.loanTag') : ''}</div>
-          <div className="transit-name">{tr.catalog.name} × {tr.qty}</div>
+          <div className="transit-name">
+            {tr.catalog.name} × {tr.qty}
+            {secondaryName(tr.catalog, lang) && (
+              <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(tr.catalog, lang)}</span>
+            )}
+          </div>
           <div className="transit-meta">
             {t('inc.meta', { b: bname(tr.from_branch), p: tr.sender?.display_name ?? '?' })} · {fmtDate(tr.sent_at)}
           </div>

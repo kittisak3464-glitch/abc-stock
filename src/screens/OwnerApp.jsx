@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fetchAllItems, fetchBranches, fetchTransactions, fmtDate, isLow } from '../lib/data'
-import { LANGS, useT } from '../lib/i18n'
+import { LANGS, secondaryName, useT } from '../lib/i18n'
 import DailyUsage from './DailyUsage'
 
 function txLabel(t, tx) {
@@ -55,6 +55,9 @@ export default function OwnerApp() {
           <div className="screen">
             <button className="btn-back" onClick={() => setItem(null)}>{t('back')}</button>
             <h1 className="h1">{item.catalog.name}</h1>
+            {secondaryName(item.catalog, lang) && (
+              <p className="item-secondary-title">{secondaryName(item.catalog, lang)}</p>
+            )}
             <p className="sub">
               {t('own.balance')}:{' '}
               <b className={isLow(item) ? 'text-danger' : ''} style={{ fontSize: '1.1rem' }}>
@@ -108,6 +111,9 @@ export default function OwnerApp() {
               <button className={'item-row' + (isLow(i) ? ' item-low' : '')} key={i.id} onClick={() => setItem(i)}>
                 <span className="item-name">
                   {i.catalog.name}
+                  {secondaryName(i.catalog, lang) && (
+                    <span className="item-secondary">{secondaryName(i.catalog, lang)}</span>
+                  )}
                   <span className="item-unit">{i.catalog.unit}</span>
                 </span>
                 <span className={'item-bal' + (isLow(i) ? ' item-bal-low' : '')}>{Number(i.balance)}</span>

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { isLow, recordTransaction } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Record({ type, presetItem, items, userId, onDone, onCancel }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [item, setItem] = useState(presetItem ?? null)
   const [search, setSearch] = useState('')
   const [qty, setQty] = useState(1)
@@ -43,6 +43,9 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
           <button className={'item-row' + (isLow(i) ? ' item-low' : '')} key={i.id} onClick={() => setItem(i)}>
             <span className="item-name">
               {i.catalog.name}
+              {secondaryName(i.catalog, lang) && (
+                <span className="item-secondary">{secondaryName(i.catalog, lang)}</span>
+              )}
               <span className="item-unit">{t('onHand')}: {Number(i.balance)} {i.catalog.unit}</span>
             </span>
             <span className="item-bal">›</span>
@@ -64,6 +67,9 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
       <div className="item-row" style={{ cursor: 'default' }}>
         <span className="item-name">
           {item.catalog.name}
+          {secondaryName(item.catalog, lang) && (
+            <span className="item-secondary">{secondaryName(item.catalog, lang)}</span>
+          )}
           <span className="item-unit">{t('onHand')}: {Number(item.balance)} {item.catalog.unit}</span>
         </span>
         <span className="item-bal">✓</span>
@@ -82,7 +88,12 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
 
       <div className={'confirm confirm-' + color}>
         <div className="confirm-a">{t('rec.review')}</div>
-        <div className="confirm-b">{item.catalog.name}</div>
+        <div className="confirm-b">
+          {item.catalog.name}
+          {secondaryName(item.catalog, lang) && (
+            <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(item.catalog, lang)}</span>
+          )}
+        </div>
         <div className={'confirm-c text-' + color}>
           {isIn ? '+' : '−'} {qty} {item.catalog.unit}
         </div>

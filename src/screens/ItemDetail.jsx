@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { adjustBalance, fetchTransactions, fmtDate, isLow, setReorderPoint } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, onUndo, onReorderSaved, onAdjusted }) {
-  const { t } = useT()
+  const { t, lang } = useT()
+  const sec = secondaryName(item.catalog, lang)
   const [txs, setTxs] = useState(null)
   const [editRp, setEditRp] = useState(false)
   const [rp, setRp] = useState(item.reorder_point ?? '')
@@ -57,6 +58,7 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
       <button className="btn-back" onClick={onBack}>{t('back')}</button>
       <div>
         <h1 className="h1">{item.catalog.name}</h1>
+        {sec && <p className="item-secondary-title">{sec}</p>}
         <p className="sub">
           {t('onHand')}:{' '}
           <b className={isLow(item) ? 'text-danger' : ''}>

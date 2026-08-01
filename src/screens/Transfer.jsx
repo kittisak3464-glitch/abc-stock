@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { fetchItems, isLow, signedRpc } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Transfer({ profile, branches, myEmail, defaultFrom, onDone, onCancel }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const isAdmin = profile.role === 'admin'
   const [fromId, setFromId] = useState(defaultFrom)
   const [toId, setToId] = useState(null)
@@ -83,6 +83,9 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
             <button className={'item-row' + (isLow(i) ? ' item-low' : '')} key={i.id} onClick={() => setItem(i)}>
               <span className="item-name">
                 {i.catalog.name}
+                {secondaryName(i.catalog, lang) && (
+                  <span className="item-secondary">{secondaryName(i.catalog, lang)}</span>
+                )}
                 <span className="item-unit">{t('onHand')}: {Number(i.balance)} {i.catalog.unit}</span>
               </span>
               <span className="item-bal">›</span>
@@ -96,6 +99,9 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
           <button className="item-row" onClick={() => setItem(null)}>
             <span className="item-name">
               {item.catalog.name}
+              {secondaryName(item.catalog, lang) && (
+                <span className="item-secondary">{secondaryName(item.catalog, lang)}</span>
+              )}
               <span className="item-unit">{from?.name} · {t('onHand')}: {Number(item.balance)} {item.catalog.unit}</span>
             </span>
             <span className="item-bal">✓</span>

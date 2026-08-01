@@ -11,7 +11,7 @@ export function isOut(item) {
 export async function fetchItems(branchId) {
   const { data, error } = await supabase
     .from('items')
-    .select('id, catalog_id, balance, reorder_point, catalog(name, unit)')
+    .select('id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit)')
     .eq('branch_id', branchId)
     .order('catalog(name)')
   if (error) throw error
@@ -23,7 +23,7 @@ export async function fetchTransactions({ branchId, itemId, limit = 30 }) {
     .from('transactions')
     .select(
       'id, type, qty, note, created_at, voided, created_by, ' +
-        'items!inner(id, branch_id, catalog(name, unit)), ' +
+        'items!inner(id, branch_id, catalog(name, name_th, name_zh, name_my, unit)), ' +
         'author:profiles!transactions_created_by_fkey(display_name)'
     )
     .order('created_at', { ascending: false })
@@ -62,7 +62,7 @@ export async function fetchBranches() {
 export async function fetchAllItems() {
   const { data, error } = await supabase
     .from('items')
-    .select('id, branch_id, catalog_id, balance, reorder_point, catalog(name, unit)')
+    .select('id, branch_id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit)')
     .limit(1000)
   if (error) throw error
   return (data ?? []).map((r) => ({ ...r, balance: Number(r.balance) }))
@@ -73,7 +73,7 @@ export async function fetchTransfers({ statuses, limit = 50 }) {
     .from('transfers')
     .select(
       'id, from_branch, to_branch, qty, kind, status, note, sent_at, received_at, ' +
-        'catalog(name, unit), ' +
+        'catalog(name, name_th, name_zh, name_my, unit), ' +
         'sender:profiles!transfers_sent_by_fkey(display_name), ' +
         'receiver:profiles!transfers_received_by_fkey(display_name)'
     )
@@ -114,13 +114,20 @@ export async function signedRpc(email, password, fn, args) {
 // ---- admin: catalog & users & reorder ----
 
 export async function fetchCatalog() {
-  const { data, error } = await supabase.from('catalog').select('id, name, unit, active').order('name')
+  const { data, error } = await supabase
+    .from('catalog')
+    .select('id, name, name_th, name_zh, name_my, unit, active')
+    .order('name')
   if (error) throw error
   return data ?? []
 }
 
-export async function addCatalogItem(name, unit, branchIds) {
-  const { data, error } = await supabase.from('catalog').insert({ name, unit }).select('id').single()
+export async function addCatalogItem(name, unit, branchIds, translations = {}) {
+  const { data, error } = await supabase
+    .from('catalog')
+    .insert({ name, unit, name_th: translations.th || null, name_zh: translations.zh || null, name_my: translations.my || null })
+    .select('id')
+    .single()
   if (error) throw error
   const rows = branchIds.map((b) => ({ branch_id: b, catalog_id: data.id, balance: 0 }))
   const { error: e2 } = await supabase.from('items').insert(rows)
@@ -165,7 +172,7 @@ export async function fetchDailyUsage(dateStr) {
   const { data, error } = await supabase
     .from('transactions')
     .select(
-      'qty, note, created_at, items!inner(branch_id, catalog(name, unit)), ' +
+      'qty, note, created_at, items!inner(branch_id, catalog(name, name_th, name_zh, name_my, unit)), ' +
         'author:profiles!transactions_created_by_fkey(display_name)'
     )
     .eq('type', 'out')
@@ -180,9 +187,13 @@ export async function fetchDailyUsage(dateStr) {
   const byBranch = {}
   for (const row of data ?? []) {
     const bid = row.items.branch_id
+    const cat = row.items.catalog
     ;(byBranch[bid] ??= []).push({
-      name: row.items.catalog.name,
-      unit: row.items.catalog.unit,
+      name: cat.name,
+      name_th: cat.name_th,
+      name_zh: cat.name_zh,
+      name_my: cat.name_my,
+      unit: cat.unit,
       qty: Number(row.qty),
       note: row.note,
       author: row.author?.display_name ?? null,

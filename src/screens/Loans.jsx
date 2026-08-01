@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { fmtDate, signedRpc } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Loans({ loans, resolved, branches, isAdmin, myEmail, onDone, onCancel }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const [openId, setOpenId] = useState(null)
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
@@ -42,7 +42,12 @@ export default function Loans({ loans, resolved, branches, isAdmin, myEmail, onD
       {loans.map((tr) => (
         <div className="loan-card" key={tr.id}>
           <div className="loan-who">{t('loan.owes', { a: bname(tr.to_branch), b: bname(tr.from_branch) })}</div>
-          <div className="loan-item">{tr.catalog.name} × {tr.qty}</div>
+          <div className="loan-item">
+            {tr.catalog.name} × {tr.qty}
+            {secondaryName(tr.catalog, lang) && (
+              <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(tr.catalog, lang)}</span>
+            )}
+          </div>
           <div className="transit-meta">
             {tr.received_at ? t('loan.borrowed', { d: fmtDate(tr.received_at) }) : ''}
             {tr.note ? ` · ${tr.note}` : ''}

@@ -65,6 +65,7 @@ const dict = {
     'adm.title': '👑 Admin', 'adm.catalog': 'Catalog', 'adm.users': 'Users',
     'adm.add': '＋ Add new item (all branches)', 'adm.new': 'New catalog item',
     'adm.name': 'Item name (English)', 'adm.unit': 'Unit e.g. Piece / pack / Bottle', 'adm.addBtn': 'Add',
+    'adm.nameTh': 'Thai name (optional)', 'adm.nameZh': 'Chinese name (optional)', 'adm.nameMy': 'Burmese name (optional)',
     'adm.saved': 'Saved ✓', 'adm.added': 'Item added to all branches ✓', 'adm.inactive': 'inactive',
     'adm.note': 'New accounts / password resets: run create_users.py or Supabase dashboard',
     'adm.off': 'Off', 'adm.on': 'On',
@@ -132,6 +133,7 @@ const dict = {
     'adm.title': '👑 管理', 'adm.catalog': '物品目录', 'adm.users': '用户',
     'adm.add': '＋ 添加新物品（全部分店）', 'adm.new': '新物品',
     'adm.name': '物品名称（英文）', 'adm.unit': '单位', 'adm.addBtn': '添加',
+    'adm.nameTh': '泰文名称（可选）', 'adm.nameZh': '中文名称（可选）', 'adm.nameMy': '缅文名称（可选）',
     'adm.saved': '已保存 ✓', 'adm.added': '已添加到全部分店 ✓', 'adm.inactive': '停用',
     'adm.note': '新账号/重置密码：运行 create_users.py 或 Supabase 后台',
     'adm.off': '停用', 'adm.on': '启用',
@@ -199,6 +201,7 @@ const dict = {
     'adm.title': '👑 จัดการ', 'adm.catalog': 'แคตตาล็อก', 'adm.users': 'ผู้ใช้',
     'adm.add': '＋ เพิ่มสินค้าใหม่ (ทุกสาขา)', 'adm.new': 'สินค้าใหม่',
     'adm.name': 'ชื่อสินค้า (อังกฤษ)', 'adm.unit': 'หน่วย เช่น Piece / pack / Bottle', 'adm.addBtn': 'เพิ่ม',
+    'adm.nameTh': 'ชื่อไทย (ไม่บังคับ)', 'adm.nameZh': 'ชื่อจีน (ไม่บังคับ)', 'adm.nameMy': 'ชื่อพม่า (ไม่บังคับ)',
     'adm.saved': 'บันทึกแล้ว ✓', 'adm.added': 'เพิ่มให้ทุกสาขาแล้ว ✓', 'adm.inactive': 'ปิดใช้',
     'adm.note': 'เพิ่มบัญชี/รีเซ็ตรหัส: รัน create_users.py หรือ Supabase dashboard',
     'adm.off': 'ปิด', 'adm.on': 'เปิด',
@@ -266,6 +269,7 @@ const dict = {
     'adm.title': '👑 စီမံ', 'adm.catalog': 'ပစ္စည်းစာရင်း', 'adm.users': 'အသုံးပြုသူများ',
     'adm.add': '＋ ပစ္စည်းအသစ်ထည့် (ဆိုင်ခွဲအားလုံး)', 'adm.new': 'ပစ္စည်းအသစ်',
     'adm.name': 'ပစ္စည်းအမည် (အင်္ဂလိပ်)', 'adm.unit': 'ယူနစ် ဥပမာ Piece / pack', 'adm.addBtn': 'ထည့်မည်',
+    'adm.nameTh': 'ထိုင်းအမည် (မဖြစ်မနေမဟုတ်)', 'adm.nameZh': 'တရုတ်အမည် (မဖြစ်မနေမဟုတ်)', 'adm.nameMy': 'မြန်မာအမည် (မဖြစ်မနေမဟုတ်)',
     'adm.saved': 'သိမ်းပြီး ✓', 'adm.added': 'ဆိုင်ခွဲအားလုံးသို့ ထည့်ပြီး ✓', 'adm.inactive': 'ပိတ်ထား',
     'adm.note': 'အကောင့်အသစ်/စကားဝှက်ပြန်သတ်မှတ်: create_users.py သို့ Supabase dashboard',
     'adm.off': 'ပိတ်', 'adm.on': 'ဖွင့်',
@@ -291,6 +295,14 @@ export function makeT(lang) {
     if (vars) for (const [k, v] of Object.entries(vars)) s = s.replaceAll(`{${k}}`, v)
     return s
   }
+}
+
+// Secondary-language name for a catalog item, or null if not applicable
+// (viewer is on English, or no translation was ever set for this item).
+export function secondaryName(catalog, lang) {
+  if (!catalog || lang === 'en') return null
+  const val = catalog[`name_${lang}`]
+  return val && val.trim() ? val : null
 }
 
 export function getSavedLang() {

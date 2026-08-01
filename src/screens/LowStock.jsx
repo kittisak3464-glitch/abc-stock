@@ -1,8 +1,8 @@
 import { isLow } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function LowStock({ allItems, branches, onCancel }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const low = allItems.filter(isLow)
   const groups = [1, 2]
   const bname = (id) => branches.find((b) => b.id === id)?.name ?? '?'
@@ -27,6 +27,9 @@ export default function LowStock({ allItems, branches, onCancel }) {
               <div className="item-row item-low" key={i.id} style={{ cursor: 'default', marginBottom: 8 }}>
                 <span className="item-name">
                   {i.catalog.name}
+                  {secondaryName(i.catalog, lang) && (
+                    <span className="item-secondary">{secondaryName(i.catalog, lang)}</span>
+                  )}
                   <span className="item-unit">{bname(i.branch_id)} · {t('item.reorderAt', { n: Number(i.reorder_point) })}</span>
                 </span>
                 <span className="tag-low">{Number(i.balance) <= 0 ? t('tag.out') : t('tag.low')}</span>

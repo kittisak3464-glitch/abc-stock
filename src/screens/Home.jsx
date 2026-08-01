@@ -1,8 +1,8 @@
 import { fmtDate, isLow } from '../lib/data'
-import { useT } from '../lib/i18n'
+import { secondaryName, useT } from '../lib/i18n'
 
 export default function Home({ profile, branch, items, recent, incomingCount, loanCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onUsage }) {
-  const { t } = useT()
+  const { t, lang } = useT()
   const lowCount = items.filter(isLow).length
   return (
     <div className="screen">
@@ -59,6 +59,9 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
                 <b className="tx-qty">{tx.type === 'in' ? '+' : '−'}{Number(tx.qty)}</b>
                 {tx.voided && <span className="tag-voided">{t('tag.undone')}</span>}
               </span>
+              {secondaryName(tx.items.catalog, lang) && (
+                <span className="item-secondary">{secondaryName(tx.items.catalog, lang)}</span>
+              )}
               <span className="tx-meta">
                 {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
               </span>

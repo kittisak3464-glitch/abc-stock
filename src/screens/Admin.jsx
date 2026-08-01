@@ -3,11 +3,12 @@ import {
   addCatalogItem, fetchCatalog, fetchProfiles, updateCatalogItem, updateProfile,
 } from '../lib/data'
 import { useT } from '../lib/i18n'
+import DailyUsage from './DailyUsage'
 
-// Admin tab: catalog (locked names) + users
+// Admin tab: catalog (locked names) + users + daily usage report
 export default function Admin({ branches, onChanged }) {
   const { t } = useT()
-  const [view, setView] = useState('catalog') // catalog | users
+  const [view, setView] = useState('catalog') // catalog | users | usage
   const [cat, setCat] = useState([])
   const [profiles, setProfiles] = useState([])
   const [editId, setEditId] = useState(null)
@@ -61,6 +62,9 @@ export default function Admin({ branches, onChanged }) {
         </button>
         <button className={'chip' + (view === 'users' ? ' chip-on' : '')} onClick={() => setView('users')}>
           {t('adm.users')}
+        </button>
+        <button className={'chip' + (view === 'usage' ? ' chip-on' : '')} onClick={() => setView('usage')}>
+          {t('adm.usage')}
         </button>
       </div>
       {msg && <div className="alert-ok" onClick={() => setMsg('')}>{msg}</div>}
@@ -159,6 +163,8 @@ export default function Admin({ branches, onChanged }) {
           ))}
         </>
       )}
+
+      {view === 'usage' && <DailyUsage branches={branches} />}
     </div>
   )
 }

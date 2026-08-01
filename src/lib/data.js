@@ -145,6 +145,45 @@ export async function adjustBalance(itemId, newBalance, reason) {
   if (error) throw error
 }
 
+// Bangkok-day boundaries for a 'YYYY-MM-DD' date string
+function bangkokDayRange(dateStr) {
+  const start = new Date(`${dateStr}T00:00:00+07:00`)
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000)
+  return { start: start.toISOString(), end: end.toISOString() }
+}
+
+export function todayBangkok() {
+  return new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Bangkok' })
+}
+
+// Real usage only: Stock Out entries, excludes transfers/loans (transfer_id
+// set) and legacy migrated corrections (no created_by — see migrate script).
+export async function fetchDailyUsage(dateStr) {
+  const { start, end } = bangkokDayRange(dateStr)
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('qty, items!inner(branch_id, catalog(name, unit))')
+    .eq('type', 'out')
+    .eq('voided', false)
+    .is('transfer_id', null)
+    .not('created_by', 'is', null)
+    .gte('created_at', start)
+    .lt('created_at', end)
+  if (error) throw error
+
+  const byBranch = {}
+  for (const row of data ?? []) {
+    const bid = row.items.branch_id
+    const name = row.items.catalog.name
+    const unit = row.items.catalog.unit
+    const bucket = (byBranch[bid] ??= {})
+    const cur = bucket[name] ?? { qty: 0, unit }
+    cur.qty += Number(row.qty)
+    bucket[name] = cur
+  }
+  return byBranch
+}
+
 export async function fetchProfiles() {
   const { data, error } = await supabase
     .from('profiles')

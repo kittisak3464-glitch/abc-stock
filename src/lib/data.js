@@ -138,6 +138,13 @@ export async function setReorderPoint(itemId, value) {
   if (error) throw error
 }
 
+export async function adjustBalance(itemId, newBalance, reason) {
+  const { error } = await supabase.rpc('adjust_balance', {
+    p_item_id: itemId, p_new_balance: newBalance, p_reason: reason,
+  })
+  if (error) throw error
+}
+
 export async function fetchProfiles() {
   const { data, error } = await supabase
     .from('profiles')

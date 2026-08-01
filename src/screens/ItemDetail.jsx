@@ -1,12 +1,18 @@
 import { useEffect, useState } from 'react'
-import { fetchTransactions, fmtDate, isLow, setReorderPoint } from '../lib/data'
+import { adjustBalance, fetchTransactions, fmtDate, isLow, setReorderPoint } from '../lib/data'
 import { useT } from '../lib/i18n'
 
-export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, onUndo, onReorderSaved }) {
+export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, onUndo, onReorderSaved, onAdjusted }) {
   const { t } = useT()
   const [txs, setTxs] = useState(null)
   const [editRp, setEditRp] = useState(false)
   const [rp, setRp] = useState(item.reorder_point ?? '')
+
+  const [editAdjust, setEditAdjust] = useState(false)
+  const [newBal, setNewBal] = useState('')
+  const [reason, setReason] = useState('')
+  const [adjBusy, setAdjBusy] = useState(false)
+  const [adjError, setAdjError] = useState('')
 
   useEffect(() => {
     fetchTransactions({ itemId: item.id, limit: 50 }).then(setTxs).catch(() => setTxs([]))
@@ -17,6 +23,26 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
     await setReorderPoint(item.id, value)
     setEditRp(false)
     onReorderSaved?.()
+  }
+
+  const diff = newBal === '' ? null : Number(newBal) - Number(item.balance)
+
+  async function saveAdjust() {
+    setAdjError('')
+    if (diff === null || diff === 0) return setAdjError(t('item.adjustSame'))
+    if (!reason.trim()) return setAdjError(t('item.adjustReasonReq'))
+    setAdjBusy(true)
+    try {
+      await adjustBalance(item.id, Number(newBal), reason.trim())
+      setEditAdjust(false)
+      setNewBal('')
+      setReason('')
+      onAdjusted?.()
+    } catch (e) {
+      setAdjError(e.message)
+    } finally {
+      setAdjBusy(false)
+    }
   }
 
   return (
@@ -55,6 +81,40 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
         </div>
       ) : (
         <button className="btn-big btn-out" onClick={() => onAction('out', item)}>{t('item.out')}</button>
+      )}
+
+      {isAdmin && !editAdjust && (
+        <button className="btn-big btn-ghost-big" onClick={() => { setEditAdjust(true); setNewBal(String(Number(item.balance))); setAdjError('') }}>
+          {t('item.adjust')}
+        </button>
+      )}
+
+      {isAdmin && editAdjust && (
+        <div className="me-card" style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <b>{t('item.adjustTitle')}</b>
+          <p className="sub" style={{ margin: 0 }}>
+            {t('item.adjustCurrent', { n: Number(item.balance), u: item.catalog.unit })}
+          </p>
+          <input className="input" type="number" min="0" placeholder={t('item.adjustNew')}
+            value={newBal} onChange={(e) => setNewBal(e.target.value)} />
+          {diff !== null && diff !== 0 && (
+            <p className={'sub ' + (diff > 0 ? 'text-in' : 'text-out')} style={{ margin: 0, fontWeight: 700 }}>
+              {t('item.adjustDiff', { sign: diff > 0 ? '+' : '−', n: Math.abs(diff), u: item.catalog.unit })}
+            </p>
+          )}
+          <input className="input" placeholder={t('item.adjustReason')}
+            value={reason} onChange={(e) => setReason(e.target.value)} />
+          {adjError && <div className="alert-danger">{adjError}</div>}
+          <div className="row-2btn">
+            <button className="btn-big btn-ghost-big" style={{ padding: 10 }}
+              onClick={() => { setEditAdjust(false); setNewBal(''); setReason(''); setAdjError('') }}>
+              {t('cancel')}
+            </button>
+            <button className="btn-big btn-accent" style={{ padding: 10 }} disabled={adjBusy} onClick={saveAdjust}>
+              {adjBusy ? t('rec.saving') : t('item.adjustSave')}
+            </button>
+          </div>
+        </div>
       )}
 
       <p className="sub" style={{ marginBottom: 0 }}>{t('item.history')}</p>

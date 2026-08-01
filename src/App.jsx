@@ -100,16 +100,19 @@ function MainApp({ profile, branch, userId, email }) {
     [isAdmin, userId]
   )
 
+  async function refreshOpenItem() {
+    if (overlay?.kind !== 'item') return
+    const fresh = await fetchItems(branchId)
+    setItems(fresh)
+    setOverlay({ kind: 'item', item: fresh.find((i) => i.id === overlay.item.id) ?? null })
+  }
+
   async function handleUndo(tx) {
     try {
       await undoTransaction(tx.id)
       setToast({ text: t('undo.done') })
       reload()
-      if (overlay?.kind === 'item') {
-        const fresh = await fetchItems(branchId)
-        setItems(fresh)
-        setOverlay({ kind: 'item', item: fresh.find((i) => i.id === overlay.item.id) ?? null })
-      }
+      await refreshOpenItem()
     } catch (e) {
       setToast({ text: e.message ?? 'Undo failed' })
     }
@@ -142,7 +145,8 @@ function MainApp({ profile, branch, userId, email }) {
         onBack={() => setOverlay(null)}
         onAction={(type, item) => setOverlay({ kind: 'record', type, item })}
         canUndo={canUndo} onUndo={handleUndo}
-        onReorderSaved={() => { reload(); setToast({ text: t('toast.reorder') }) }} />
+        onReorderSaved={() => { reload(); refreshOpenItem(); setToast({ text: t('toast.reorder') }) }}
+        onAdjusted={() => { reload(); refreshOpenItem(); setToast({ text: t('toast.adjusted') }) }} />
     )
   } else if (overlay?.kind === 'transfer') {
     body = (

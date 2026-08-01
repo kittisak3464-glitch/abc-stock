@@ -61,6 +61,7 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
               <span className="tx-meta">
                 {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
               </span>
+              {tx.note && <span className="tx-note">📝 {tx.note}</span>}
             </span>
           </div>
         ))}

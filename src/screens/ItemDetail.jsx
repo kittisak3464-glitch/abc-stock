@@ -68,12 +68,12 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
           <span className="tx-body">
             <span className="tx-name">
               <b className="tx-qty">{tx.type === 'in' ? '+' : '−'}{Number(tx.qty)}</b>
-              {tx.note ? ` · ${tx.note}` : ''}
               {tx.voided && <span className="tag-voided">{t('tag.undone')}</span>}
             </span>
             <span className="tx-meta">
               {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
             </span>
+            {tx.note && <span className="tx-note">📝 {tx.note}</span>}
           </span>
           {canUndo(tx) && (
             <button className="btn-undo" onClick={() => onUndo(tx)}>{t('undo')}</button>

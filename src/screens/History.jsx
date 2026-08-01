@@ -21,8 +21,8 @@ export default function History({ txs, canUndo, onUndo }) {
             </span>
             <span className="tx-meta">
               {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
-              {tx.note ? ` · ${tx.note}` : ''}
             </span>
+            {tx.note && <span className="tx-note">📝 {tx.note}</span>}
           </span>
           {canUndo(tx) && (
             <button className="btn-undo" onClick={() => onUndo(tx)}>{t('undo')}</button>

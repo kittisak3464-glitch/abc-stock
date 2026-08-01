@@ -470,6 +470,18 @@ button.stat { cursor: pointer; }
   color: var(--muted);
 }
 
+.tx-note {
+  font-size: 0.82rem;
+  color: var(--ink);
+  background: var(--line);
+  border-radius: 8px;
+  padding: 4px 9px;
+  margin-top: 3px;
+  display: inline-block;
+  width: fit-content;
+  line-height: 1.4;
+}
+
 .tag-voided {
   margin-left: 8px;
   font-size: 0.65rem;

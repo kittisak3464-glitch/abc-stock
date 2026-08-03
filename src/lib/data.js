@@ -164,7 +164,9 @@ export function todayBangkok() {
 }
 
 // Real usage only: Stock Out entries, excludes transfers/loans (transfer_id
-// set) and legacy migrated corrections (no created_by — see migrate script).
+// set), legacy migrated corrections (no created_by — see migrate script),
+// and admin balance adjustments (adjust_balance RPC — stock-count
+// corrections, not real usage; identified by their note prefix).
 // Returns { [branchId]: [{ name, unit, qty, note, author, time }, ...] } —
 // one line per transaction (not summed), so each recorded note stays visible.
 export async function fetchDailyUsage(dateStr) {
@@ -179,6 +181,7 @@ export async function fetchDailyUsage(dateStr) {
     .eq('voided', false)
     .is('transfer_id', null)
     .not('created_by', 'is', null)
+    .not('note', 'ilike', 'Stock count adjustment:%')
     .gte('created_at', start)
     .lt('created_at', end)
     .order('created_at')

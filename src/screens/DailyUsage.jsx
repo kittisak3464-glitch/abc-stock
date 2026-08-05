@@ -65,8 +65,21 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
     day: '2-digit', month: '2-digit', year: 'numeric',
   })
 
+  const allTotals = byBranch ? summarize(Object.values(byBranch).flat()) : null
+
   function buildText() {
     const lines = [`${t(titleKey)} ${dateLabel}`, '']
+    lines.push(`📊 ${t('usage.allBranches')}`)
+    if (!allTotals || Object.keys(allTotals).length === 0) {
+      lines.push(`• ${t(noneKey)}`)
+    } else {
+      for (const name of Object.keys(allTotals).sort()) {
+        const { qty, unit } = allTotals[name]
+        const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
+        lines.push(`• ${name} ${q} ${unit}`)
+      }
+    }
+    lines.push('')
     for (const b of [...branches].sort((a, c) => a.name.localeCompare(c.name))) {
       lines.push(`🏨 ${b.name}`)
       const entries = byBranch?.[b.id]
@@ -125,6 +138,31 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
       {msg && <div className="alert-ok">{msg}</div>}
 
       {byBranch === null && <p className="sub">{t('item.loading')}</p>}
+
+      {byBranch && (
+        <div>
+          <p className="sub" style={{ margin: '0 0 6px', fontWeight: 700 }}>📊 {t('usage.allBranches')}</p>
+          {!allTotals || Object.keys(allTotals).length === 0 ? (
+            <p className="sub" style={{ marginLeft: 4 }}>{t(noneKey)}</p>
+          ) : (
+            Object.keys(allTotals).sort().map((name) => {
+              const { qty, unit } = allTotals[name]
+              const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
+              const sec = secondaryName(allTotals[name], lang)
+              return (
+                <div className="item-row" key={name} style={{ cursor: 'default' }}>
+                  <span className="item-name">
+                    {name}
+                    {sec && <span className="item-secondary">{sec}</span>}
+                  </span>
+                  <span className="item-bal">{q} {unit}</span>
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
+
       {byBranch && [...branches].sort((a, b) => a.name.localeCompare(b.name)).map((b) => {
         const entries = byBranch[b.id]
         const totals = entries ? summarize(entries) : null

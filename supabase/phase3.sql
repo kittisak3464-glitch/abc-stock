@@ -94,8 +94,8 @@ begin
   select * into t from transfers where id = p_transfer_id for update;
   if t is null then raise exception 'Loan not found'; end if;
   if t.kind <> 'loan' or t.status <> 'pending_return' then raise exception 'Not an outstanding loan'; end if;
-  if my_role() <> 'admin' and (my_role() <> 'staff' or my_branch() <> t.to_branch) then
-    raise exception 'Only staff of the borrowing branch can return';
+  if my_role() <> 'admin' and (my_role() <> 'staff' or my_branch() not in (t.to_branch, t.from_branch)) then
+    raise exception 'Only staff of the borrowing or lending branch can return';
   end if;
 
   select * into v_borrower from items

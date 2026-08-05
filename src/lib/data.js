@@ -73,11 +73,14 @@ export async function fetchTransfers({ statuses, limit = 50 }) {
     .from('transfers')
     .select(
       'id, from_branch, to_branch, qty, kind, status, note, sent_at, received_at, ' +
+        'return_sent_at, return_received_at, ' +
         'requested_by, requested_at, decline_reason, ' +
         'catalog(name, name_th, name_zh, name_my, unit), ' +
         'sender:profiles!transfers_sent_by_fkey(display_name), ' +
         'receiver:profiles!transfers_received_by_fkey(display_name), ' +
-        'requester:profiles!transfers_requested_by_fkey(display_name)'
+        'requester:profiles!transfers_requested_by_fkey(display_name), ' +
+        'return_sender:profiles!transfers_return_sent_by_fkey(display_name), ' +
+        'return_receiver:profiles!transfers_return_received_by_fkey(display_name)'
     )
     .order('id', { ascending: false })
     .limit(limit)

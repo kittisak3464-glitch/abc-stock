@@ -375,6 +375,57 @@ button.stat { cursor: pointer; }
   padding: 2px 10px;
 }
 
+/* ---------- daily report: all-branches summary vs per-branch ---------- */
+
+.summary-card {
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 2px 14px 4px;
+}
+
+.summary-card .item-row {
+  background: none;
+  border: none;
+  border-radius: 0;
+  border-top: 1px solid var(--line);
+  padding: 10px 0;
+  cursor: default;
+}
+
+.summary-card .item-row:first-of-type { border-top: none; }
+
+.summary-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: var(--accent);
+  background: var(--in-soft);
+  border-radius: 999px;
+  padding: 5px 14px;
+  margin: 0 0 10px;
+}
+
+.section-divider {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 4px 0 -4px;
+}
+
+.section-divider::before, .section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--line);
+}
+
 /* ---------- qty stepper ---------- */
 
 .qtyrow {
@@ -645,6 +696,18 @@ button.stat { cursor: pointer; }
 .request-banner {
   border: 1.5px solid var(--danger);
   background: var(--danger-soft);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.return-banner {
+  border: 1.5px solid var(--out);
+  background: var(--out-soft);
   color: var(--ink);
   border-radius: 14px;
   padding: 13px 16px;

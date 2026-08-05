@@ -85,7 +85,7 @@ function MainApp({ profile, branch, userId, email }) {
     fetchItems(branchId).then(setItems).catch(console.error)
     fetchTransactions({ branchId, limit: 40 }).then(setTxs).catch(console.error)
     fetchTransfers({
-      statuses: ['requested', 'cancelled', 'declined', 'in_transit', 'received', 'pending_return', 'returned', 'waived'],
+      statuses: ['requested', 'cancelled', 'declined', 'in_transit', 'received', 'pending_return', 'return_in_transit', 'returned', 'waived'],
       limit: 60,
     }).then(setTransfers).catch(console.error)
     if (isAdmin) fetchAllItems().then(setAllItems).catch(console.error)
@@ -94,7 +94,8 @@ function MainApp({ profile, branch, userId, email }) {
   useEffect(reload, [reload])
 
   const incoming = transfers.filter((t2) => t2.status === 'in_transit' && (isAdmin || t2.to_branch === branchId))
-  const loans = transfers.filter((t2) => t2.status === 'pending_return')
+  const loans = transfers.filter((t2) => ['pending_return', 'return_in_transit'].includes(t2.status))
+  const returningCount = transfers.filter((t2) => t2.status === 'return_in_transit' && (isAdmin || t2.from_branch === branchId)).length
   const resolvedLoans = transfers.filter((t2) => t2.kind === 'loan' && ['returned', 'waived'].includes(t2.status)).slice(0, 10)
 
   const requestsToFulfill = transfers.filter((t2) => t2.status === 'requested' && (isAdmin || t2.from_branch === branchId))
@@ -168,7 +169,7 @@ function MainApp({ profile, branch, userId, email }) {
     )
   } else if (overlay?.kind === 'loans') {
     body = (
-      <Loans loans={loans} resolved={resolvedLoans} branches={branches} isAdmin={isAdmin} myEmail={email}
+      <Loans loans={loans} resolved={resolvedLoans} branches={branches} isAdmin={isAdmin} myBranchId={branchId} myEmail={email}
         onDone={(text) => done(text)} onCancel={() => setOverlay(null)} />
     )
   } else if (overlay?.kind === 'request') {
@@ -189,7 +190,7 @@ function MainApp({ profile, branch, userId, email }) {
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}
-        incomingCount={incoming.length} loanCount={loans.length} requestCount={requestsToFulfill.length}
+        incomingCount={incoming.length} loanCount={loans.length} returningCount={returningCount} requestCount={requestsToFulfill.length}
         onAction={(type) => setOverlay({ kind: 'record', type })}
         onGoLow={() => { if (isAdmin) setOverlay({ kind: 'lowstock' }); else { setStockFilter('low'); setTab('stock') } }}
         onTransfer={() => setOverlay({ kind: 'transfer' })}

@@ -80,6 +80,7 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
       }
     }
     lines.push('')
+    lines.push(`— ${t('usage.byBranch')} —`, '')
     for (const b of [...branches].sort((a, c) => a.name.localeCompare(c.name))) {
       lines.push(`🏨 ${b.name}`)
       const entries = byBranch?.[b.id]
@@ -140,17 +141,17 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
       {byBranch === null && <p className="sub">{t('item.loading')}</p>}
 
       {byBranch && (
-        <div>
-          <p className="sub" style={{ margin: '0 0 6px', fontWeight: 700 }}>📊 {t('usage.allBranches')}</p>
+        <div className="summary-card">
+          <p className="summary-label">📊 {t('usage.allBranches')}</p>
           {!allTotals || Object.keys(allTotals).length === 0 ? (
-            <p className="sub" style={{ marginLeft: 4 }}>{t(noneKey)}</p>
+            <p className="sub" style={{ margin: '0 0 10px' }}>{t(noneKey)}</p>
           ) : (
             Object.keys(allTotals).sort().map((name) => {
               const { qty, unit } = allTotals[name]
               const q = qty === Math.round(qty) ? qty : qty.toFixed(1)
               const sec = secondaryName(allTotals[name], lang)
               return (
-                <div className="item-row" key={name} style={{ cursor: 'default' }}>
+                <div className="item-row" key={name}>
                   <span className="item-name">
                     {name}
                     {sec && <span className="item-secondary">{sec}</span>}
@@ -162,6 +163,8 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
           )}
         </div>
       )}
+
+      {byBranch && <p className="section-divider">{t('usage.byBranch')}</p>}
 
       {byBranch && [...branches].sort((a, b) => a.name.localeCompare(b.name)).map((b) => {
         const entries = byBranch[b.id]

@@ -31,6 +31,12 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
         </button>
       )}
 
+      {requestCount > 0 && (
+        <button className="request-banner" onClick={onRequests}>
+          {t('home.requestBanner', { n: requestCount })}
+        </button>
+      )}
+
       {profile.role === 'admin' && (
         <button className="btn-big btn-in" onClick={() => onAction('in')}>{t('home.stockIn')}</button>
       )}

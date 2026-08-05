@@ -642,6 +642,18 @@ button.stat { cursor: pointer; }
   cursor: pointer;
 }
 
+.request-banner {
+  border: 1.5px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--ink);
+  border-radius: 14px;
+  padding: 13px 16px;
+  font-family: inherit;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+}
+
 .transit-card {
   border: 1.5px solid var(--transfer);
   background: var(--transfer-soft);

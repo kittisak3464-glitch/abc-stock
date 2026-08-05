@@ -206,7 +206,7 @@ export function todayBangkok() {
 // corrections, not real usage; identified by their note prefix).
 // Returns { [branchId]: [{ name, unit, qty, note, author, time }, ...] } —
 // one line per transaction (not summed), so each recorded note stays visible.
-export async function fetchDailyUsage(dateStr) {
+export async function fetchDailyTransactions(dateStr, type = 'out') {
   const { start, end } = bangkokDayRange(dateStr)
   const { data, error } = await supabase
     .from('transactions')
@@ -214,7 +214,7 @@ export async function fetchDailyUsage(dateStr) {
       'qty, note, created_at, items!inner(branch_id, catalog(name, name_th, name_zh, name_my, unit)), ' +
         'author:profiles!transactions_created_by_fkey(display_name)'
     )
-    .eq('type', 'out')
+    .eq('type', type)
     .eq('voided', false)
     .is('transfer_id', null)
     .not('created_by', 'is', null)

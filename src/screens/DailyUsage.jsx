@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { fetchDailyUsage, fmtDate, todayBangkok } from '../lib/data'
+import { fetchDailyTransactions, fmtDate, todayBangkok } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
 function summarize(entries) {
@@ -13,11 +13,12 @@ function summarize(entries) {
 }
 
 // Detail screen: every recorded entry (with note) for one item on one day
-function ItemUsageDetail({ branchName, name, entries, onBack }) {
+function ItemUsageDetail({ branchName, name, entries, onBack, type }) {
   const { t, lang } = useT()
   const total = entries.reduce((sum, e) => sum + e.qty, 0)
   const q = total === Math.round(total) ? total : total.toFixed(1)
   const sec = secondaryName(entries[0], lang)
+  const sign = type === 'in' ? '+' : '−'
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <button className="btn-back" onClick={onBack}>{t('back')}</button>
@@ -28,10 +29,10 @@ function ItemUsageDetail({ branchName, name, entries, onBack }) {
       </div>
       {entries.map((e, i) => (
         <div className="tx-row" key={i}>
-          <span className="tx-ic tx-out">−</span>
+          <span className={'tx-ic ' + (type === 'in' ? 'tx-in' : 'tx-out')}>{sign}</span>
           <span className="tx-body">
             <span className="tx-name">
-              <b className="tx-qty">{e.qty} {e.unit}</b>
+              <b className="tx-qty">{sign}{e.qty} {e.unit}</b>
             </span>
             <span className="tx-meta">
               {fmtDate(e.time)} · {t('by')} {e.author ?? 'system'}
@@ -44,30 +45,33 @@ function ItemUsageDetail({ branchName, name, entries, onBack }) {
   )
 }
 
-export default function DailyUsage({ branches, onExit }) {
+export default function DailyUsage({ branches, onExit, type = 'out' }) {
   const { t, lang } = useT()
   const [date, setDate] = useState(todayBangkok())
   const [byBranch, setByBranch] = useState(null)
   const [msg, setMsg] = useState('')
   const [openItem, setOpenItem] = useState(null) // { branchId, branchName, name }
 
+  const titleKey = type === 'in' ? 'restock.title' : 'usage.title'
+  const noneKey = type === 'in' ? 'restock.none' : 'usage.none'
+
   useEffect(() => {
     setByBranch(null)
     setOpenItem(null)
-    fetchDailyUsage(date).then(setByBranch).catch(console.error)
-  }, [date])
+    fetchDailyTransactions(date, type).then(setByBranch).catch(console.error)
+  }, [date, type])
 
   const dateLabel = new Date(`${date}T12:00:00+07:00`).toLocaleDateString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',
   })
 
   function buildText() {
-    const lines = [`${t('usage.title')} ${dateLabel}`, '']
+    const lines = [`${t(titleKey)} ${dateLabel}`, '']
     for (const b of [...branches].sort((a, c) => a.name.localeCompare(c.name))) {
       lines.push(`🏨 ${b.name}`)
       const entries = byBranch?.[b.id]
       if (!entries || entries.length === 0) {
-        lines.push(`• ${t('usage.none')}`)
+        lines.push(`• ${t(noneKey)}`)
       } else {
         const totals = summarize(entries)
         for (const name of Object.keys(totals).sort()) {
@@ -96,6 +100,7 @@ export default function DailyUsage({ branches, onExit }) {
       <ItemUsageDetail
         branchName={openItem.branchName}
         name={openItem.name}
+        type={type}
         entries={byBranch[openItem.branchId].filter((e) => e.name === openItem.name)}
         onBack={() => setOpenItem(null)}
       />
@@ -107,7 +112,7 @@ export default function DailyUsage({ branches, onExit }) {
       {onExit && (
         <>
           <button className="btn-back" onClick={onExit}>{t('back')}</button>
-          <h1 className="h1">{t('usage.title')}</h1>
+          <h1 className="h1">{t(titleKey)}</h1>
         </>
       )}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -127,7 +132,7 @@ export default function DailyUsage({ branches, onExit }) {
           <div key={b.id}>
             <p className="sub" style={{ margin: '0 0 6px', fontWeight: 700 }}>🏨 {b.name}</p>
             {!totals || Object.keys(totals).length === 0 ? (
-              <p className="sub" style={{ marginLeft: 4 }}>{t('usage.none')}</p>
+              <p className="sub" style={{ marginLeft: 4 }}>{t(noneKey)}</p>
             ) : (
               Object.keys(totals).sort().map((name) => {
                 const { qty, unit } = totals[name]

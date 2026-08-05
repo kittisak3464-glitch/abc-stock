@@ -22,6 +22,7 @@ export default function OwnerApp() {
   const [item, setItem] = useState(null)
   const [txs, setTxs] = useState(null)
   const [showUsage, setShowUsage] = useState(false)
+  const [showRestock, setShowRestock] = useState(false)
 
   useEffect(() => {
     fetchBranches().then(setBranches)
@@ -42,6 +43,18 @@ export default function OwnerApp() {
         <main className="app-body">
           <div className="screen">
             <DailyUsage branches={branches} onExit={() => setShowUsage(false)} />
+          </div>
+        </main>
+      </div>
+    )
+  }
+
+  if (showRestock) {
+    return (
+      <div className="app-wrap">
+        <main className="app-body">
+          <div className="screen">
+            <DailyUsage branches={branches} type="in" onExit={() => setShowRestock(false)} />
           </div>
         </main>
       </div>
@@ -158,6 +171,9 @@ export default function OwnerApp() {
 
           <button className="btn-big btn-transfer" onClick={() => setShowUsage(true)}>
             {t('adm.usage')}
+          </button>
+          <button className="btn-big btn-transfer" onClick={() => setShowRestock(true)}>
+            {t('adm.restock')}
           </button>
 
           <div className="me-card">

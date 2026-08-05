@@ -73,9 +73,11 @@ export async function fetchTransfers({ statuses, limit = 50 }) {
     .from('transfers')
     .select(
       'id, from_branch, to_branch, qty, kind, status, note, sent_at, received_at, ' +
+        'requested_by, requested_at, decline_reason, ' +
         'catalog(name, name_th, name_zh, name_my, unit), ' +
         'sender:profiles!transfers_sent_by_fkey(display_name), ' +
-        'receiver:profiles!transfers_received_by_fkey(display_name)'
+        'receiver:profiles!transfers_received_by_fkey(display_name), ' +
+        'requester:profiles!transfers_requested_by_fkey(display_name)'
     )
     .order('id', { ascending: false })
     .limit(limit)
@@ -83,6 +85,41 @@ export async function fetchTransfers({ statuses, limit = 50 }) {
   const { data, error } = await q
   if (error) throw error
   return (data ?? []).map((r) => ({ ...r, qty: Number(r.qty) }))
+}
+
+export async function fetchBranchStock(branchId) {
+  const { data, error } = await supabase.rpc('branch_stock', { p_branch_id: branchId })
+  if (error) throw error
+  const map = {}
+  for (const row of data ?? []) map[row.catalog_id] = Number(row.balance)
+  return map
+}
+
+export async function fetchItemBranchStock(catalogId) {
+  const { data, error } = await supabase.rpc('item_branch_stock', { p_catalog_id: catalogId })
+  if (error) throw error
+  const map = {}
+  for (const row of data ?? []) map[row.branch_id] = Number(row.balance)
+  return map
+}
+
+export async function requestTransfer({ fromBranch, toBranch, catalogId, qty, note }) {
+  const { data, error } = await supabase.rpc('request_transfer', {
+    p_from_branch: fromBranch, p_to_branch: toBranch, p_catalog_id: catalogId,
+    p_qty: qty, p_note: note || null,
+  })
+  if (error) throw error
+  return data
+}
+
+export async function declineRequest(transferId, reason) {
+  const { error } = await supabase.rpc('decline_request', { p_transfer_id: transferId, p_reason: reason || null })
+  if (error) throw error
+}
+
+export async function cancelRequest(transferId) {
+  const { error } = await supabase.rpc('cancel_request', { p_transfer_id: transferId })
+  if (error) throw error
 }
 
 // Password-signed RPC: verifies email+password against Supabase Auth with a

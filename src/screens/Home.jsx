@@ -1,7 +1,7 @@
 import { fmtDate, isLow } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
-export default function Home({ profile, branch, items, recent, incomingCount, loanCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onUsage }) {
+export default function Home({ profile, branch, items, recent, incomingCount, loanCount, requestCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onRequests, onUsage }) {
   const { t, lang } = useT()
   const lowCount = items.filter(isLow).length
   return (
@@ -43,6 +43,9 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
           {t('home.loans')}{loanCount > 0 ? ` (${loanCount})` : ''}
         </button>
       </div>
+      <button className="btn-big btn-ghost-big" onClick={onRequests}>
+        {t('home.requests')}{requestCount > 0 ? ` (${requestCount})` : ''}
+      </button>
       <button className="btn-big btn-ghost-big" onClick={onUsage}>{t('adm.usage')}</button>
 
       <div>

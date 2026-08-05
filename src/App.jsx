@@ -13,6 +13,8 @@ import Me from './screens/Me'
 import Transfer from './screens/Transfer'
 import Incoming from './screens/Incoming'
 import Loans from './screens/Loans'
+import Request from './screens/Request'
+import Requests from './screens/Requests'
 import LowStock from './screens/LowStock'
 import DailyUsage from './screens/DailyUsage'
 import Admin from './screens/Admin'
@@ -82,8 +84,10 @@ function MainApp({ profile, branch, userId, email }) {
     if (!branchId) return
     fetchItems(branchId).then(setItems).catch(console.error)
     fetchTransactions({ branchId, limit: 40 }).then(setTxs).catch(console.error)
-    fetchTransfers({ statuses: ['in_transit', 'pending_return', 'returned', 'waived'], limit: 60 })
-      .then(setTransfers).catch(console.error)
+    fetchTransfers({
+      statuses: ['requested', 'cancelled', 'declined', 'in_transit', 'received', 'pending_return', 'returned', 'waived'],
+      limit: 60,
+    }).then(setTransfers).catch(console.error)
     if (isAdmin) fetchAllItems().then(setAllItems).catch(console.error)
   }, [branchId, isAdmin])
 
@@ -92,6 +96,9 @@ function MainApp({ profile, branch, userId, email }) {
   const incoming = transfers.filter((t2) => t2.status === 'in_transit' && (isAdmin || t2.to_branch === branchId))
   const loans = transfers.filter((t2) => t2.status === 'pending_return')
   const resolvedLoans = transfers.filter((t2) => t2.kind === 'loan' && ['returned', 'waived'].includes(t2.status)).slice(0, 10)
+
+  const requestsToFulfill = transfers.filter((t2) => t2.status === 'requested' && (isAdmin || t2.from_branch === branchId))
+  const myRequests = transfers.filter((t2) => t2.requested_by != null && (isAdmin || t2.to_branch === branchId))
 
   const canUndo = useCallback(
     (tx) =>
@@ -164,6 +171,17 @@ function MainApp({ profile, branch, userId, email }) {
       <Loans loans={loans} resolved={resolvedLoans} branches={branches} isAdmin={isAdmin} myEmail={email}
         onDone={(text) => done(text)} onCancel={() => setOverlay(null)} />
     )
+  } else if (overlay?.kind === 'request') {
+    body = (
+      <Request profile={profile} branches={branches} defaultTo={branchId}
+        onDone={(text) => done(text)} onCancel={() => setOverlay({ kind: 'requests' })} />
+    )
+  } else if (overlay?.kind === 'requests') {
+    body = (
+      <Requests toFulfill={requestsToFulfill} mine={myRequests} branches={branches} isAdmin={isAdmin} myEmail={email}
+        onDone={(text) => done(text)} onCancel={() => setOverlay(null)}
+        onNew={() => setOverlay({ kind: 'request' })} />
+    )
   } else if (overlay?.kind === 'lowstock') {
     body = <LowStock allItems={allItems} branches={branches} onCancel={() => setOverlay(null)} />
   } else if (overlay?.kind === 'usage') {
@@ -171,12 +189,13 @@ function MainApp({ profile, branch, userId, email }) {
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}
-        incomingCount={incoming.length} loanCount={loans.length}
+        incomingCount={incoming.length} loanCount={loans.length} requestCount={requestsToFulfill.length}
         onAction={(type) => setOverlay({ kind: 'record', type })}
         onGoLow={() => { if (isAdmin) setOverlay({ kind: 'lowstock' }); else { setStockFilter('low'); setTab('stock') } }}
         onTransfer={() => setOverlay({ kind: 'transfer' })}
         onIncoming={() => setOverlay({ kind: 'incoming' })}
         onLoans={() => setOverlay({ kind: 'loans' })}
+        onRequests={() => setOverlay({ kind: 'requests' })}
         onUsage={() => setOverlay({ kind: 'usage' })} />
     )
   } else if (tab === 'stock') {

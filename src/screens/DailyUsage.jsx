@@ -50,6 +50,7 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
   const [date, setDate] = useState(todayBangkok())
   const [byBranch, setByBranch] = useState(null)
   const [msg, setMsg] = useState('')
+  const [error, setError] = useState('')
   const [openItem, setOpenItem] = useState(null) // { branchId, branchName, name }
 
   const titleKey = type === 'in' ? 'restock.title' : 'usage.title'
@@ -58,8 +59,9 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
   useEffect(() => {
     setByBranch(null)
     setOpenItem(null)
-    fetchDailyTransactions(date, type).then(setByBranch).catch(console.error)
-  }, [date, type])
+    setError('')
+    fetchDailyTransactions(date, type).then(setByBranch).catch(() => setError(t('err.load')))
+  }, [date, type, t])
 
   const dateLabel = new Date(`${date}T12:00:00+07:00`).toLocaleDateString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -137,8 +139,9 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
 
       <button className="btn-big btn-accent" onClick={copyText}>{t('usage.copy')}</button>
       {msg && <div className="alert-ok">{msg}</div>}
+      {error && <div className="alert-danger">{error}</div>}
 
-      {byBranch === null && <p className="sub">{t('item.loading')}</p>}
+      {byBranch === null && !error && <p className="sub">{t('item.loading')}</p>}
 
       {byBranch && (
         <div className="summary-card">

@@ -282,6 +282,8 @@ function MainApp({ profile, branch, userId, email }) {
 export default function App() {
   const [session, setSession] = useState(undefined)
   const [profile, setProfile] = useState(null)
+  const [profileError, setProfileError] = useState(false)
+  const [langSaveError, setLangSaveError] = useState(false)
   const [lang, setLangState] = useState(getSavedLang())
 
   useEffect(() => {
@@ -290,8 +292,9 @@ export default function App() {
     return () => sub.subscription.unsubscribe()
   }, [])
 
-  useEffect(() => {
+  const loadProfile = useCallback(() => {
     if (!session) { setProfile(null); return }
+    setProfileError(false)
     supabase
       .from('profiles')
       .select('display_name, role, branch_id, lang, branches(id, name, code, procurement_group)')
@@ -302,14 +305,25 @@ export default function App() {
           setProfile(data)
           setLangState(data.lang)
           saveLang(data.lang)
+        } else {
+          setProfileError(true)
         }
       })
+      .catch(() => setProfileError(true))
   }, [session])
+
+  useEffect(loadProfile, [loadProfile])
+
+  useEffect(() => {
+    if (!langSaveError) return
+    const timer = setTimeout(() => setLangSaveError(false), 6000)
+    return () => clearTimeout(timer)
+  }, [langSaveError])
 
   const setLang = useCallback((l) => {
     setLangState(l)
     saveLang(l)
-    if (session) supabase.rpc('set_my_lang', { p_lang: l }).then(() => {})
+    if (session) supabase.rpc('set_my_lang', { p_lang: l }).catch(() => setLangSaveError(true))
   }, [session])
 
   const i18n = useMemo(() => ({ lang, t: makeT(lang), setLang }), [lang, setLang])
@@ -317,6 +331,18 @@ export default function App() {
   let content
   if (session === undefined) content = null
   else if (!session) content = <Login />
+  else if (profileError) content = (
+    <div className="login-wrap">
+      <div className="login-card">
+        <div className="appmark">
+          <span className="appmark-dot">📦</span>
+          <span>ABC Stock</span>
+        </div>
+        <div className="login-error">{i18n.t('app.profileError')}</div>
+        <button type="button" className="btn-big btn-accent" onClick={loadProfile}>{i18n.t('app.retry')}</button>
+      </div>
+    </div>
+  )
   else if (!profile) content = null
   else if (profile.role === 'owner') content = <OwnerApp key={session.user.id} profile={profile} />
   else content = (
@@ -324,5 +350,12 @@ export default function App() {
       userId={session.user.id} email={session.user.email} />
   )
 
-  return <I18nContext.Provider value={i18n}>{content}</I18nContext.Provider>
+  return (
+    <I18nContext.Provider value={i18n}>
+      {content}
+      {langSaveError && (
+        <div className="toast"><span>{i18n.t('app.langSaveError')}</span></div>
+      )}
+    </I18nContext.Provider>
+  )
 }

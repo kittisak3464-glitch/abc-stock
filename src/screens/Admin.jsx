@@ -17,8 +17,8 @@ export default function Admin({ branches, onChanged }) {
   const [msg, setMsg] = useState('')
 
   function reload() {
-    fetchCatalog().then(setCat)
-    fetchProfiles().then(setProfiles)
+    fetchCatalog().then(setCat).catch(() => setMsg(t('err.load')))
+    fetchProfiles().then(setProfiles).catch(() => setMsg(t('err.load')))
   }
   useEffect(reload, [])
 

@@ -18,17 +18,17 @@ export default function Request({ profile, branches, defaultTo, transfers, onDon
   const [error, setError] = useState('')
 
   useEffect(() => {
-    fetchCatalog().then(setCatalog).catch(console.error)
+    fetchCatalog().then(setCatalog).catch(() => setError(t('err.load')))
   }, [])
 
   useEffect(() => {
     setStock({})
-    if (fromId) fetchBranchStock(fromId).then(setStock).catch(console.error)
+    if (fromId) fetchBranchStock(fromId).then(setStock).catch(() => setError(t('err.load')))
   }, [fromId])
 
   useEffect(() => {
     setOtherStock({})
-    if (item) fetchItemBranchStock(item.id).then(setOtherStock).catch(console.error)
+    if (item) fetchItemBranchStock(item.id).then(setOtherStock).catch(() => setError(t('err.load')))
   }, [item])
 
   const to = branches.find((b) => b.id === toId)

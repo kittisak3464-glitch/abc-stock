@@ -19,7 +19,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, tran
 
   useEffect(() => {
     setItem(null)
-    fetchItems(fromId).then(setItems).catch(console.error)
+    fetchItems(fromId).then(setItems).catch(() => setError(t('err.load')))
   }, [fromId])
 
   const from = branches.find((b) => b.id === fromId)

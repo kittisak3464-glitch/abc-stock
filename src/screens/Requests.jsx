@@ -5,7 +5,7 @@ import { secondaryName, useT } from '../lib/i18n'
 function statusTag(t, tr) {
   switch (tr.status) {
     case 'declined': return t('reqs.declined') + (tr.decline_reason ? ` — ${tr.decline_reason}` : '')
-    case 'cancelled': return t('reqs.cancelled')
+    case 'cancelled': return tr.sent_at ? t('reqs.cancelledInTransit') : t('reqs.cancelled')
     case 'in_transit': return t('reqs.approved')
     case 'received': return t('reqs.received')
     case 'pending_return': return t('reqs.approved')

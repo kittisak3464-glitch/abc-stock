@@ -73,25 +73,37 @@ function MainApp({ profile, branch, userId, email }) {
   const [overlay, setOverlay] = useState(null)
   const [toast, setToast] = useState(null)
 
+  const reportLoadError = useCallback((e) => {
+    console.error(e)
+    setToast({ text: t('err.load') })
+  }, [t])
+
   useEffect(() => {
     fetchBranches().then((bs) => {
       setBranches(bs)
       if (isAdmin) setBranchId((cur) => cur ?? bs[0]?.id)
-    })
-  }, [isAdmin])
+    }).catch(reportLoadError)
+  }, [isAdmin, reportLoadError])
 
   const reload = useCallback(() => {
     if (!branchId) return
-    fetchItems(branchId).then(setItems).catch(console.error)
-    fetchTransactions({ branchId, limit: 40 }).then(setTxs).catch(console.error)
+    fetchItems(branchId).then(setItems).catch(reportLoadError)
+    fetchTransactions({ branchId, limit: 40 }).then(setTxs).catch(reportLoadError)
     fetchTransfers({
       statuses: ['requested', 'cancelled', 'declined', 'in_transit', 'received', 'pending_return', 'return_in_transit', 'returned', 'waived'],
       limit: 60,
-    }).then(setTransfers).catch(console.error)
-    if (isAdmin) fetchAllItems().then(setAllItems).catch(console.error)
-  }, [branchId, isAdmin])
+    }).then(setTransfers).catch(reportLoadError)
+    if (isAdmin) fetchAllItems().then(setAllItems).catch(reportLoadError)
+  }, [branchId, isAdmin, reportLoadError])
 
   useEffect(reload, [reload])
+
+  // Poll so incoming/request/return-confirmation banners actually show up
+  // while the app is left open, not just right after the user does something.
+  useEffect(() => {
+    const id = setInterval(reload, 60000)
+    return () => clearInterval(id)
+  }, [reload])
 
   const incoming = transfers.filter((t2) => t2.status === 'in_transit' && (isAdmin || t2.to_branch === branchId))
   const loans = transfers.filter((t2) => ['pending_return', 'return_in_transit'].includes(t2.status))
@@ -103,7 +115,7 @@ function MainApp({ profile, branch, userId, email }) {
 
   const canUndo = useCallback(
     (tx) =>
-      !tx.voided &&
+      !tx.voided && !tx.transfer_id &&
       (isAdmin ||
         (tx.created_by === userId && Date.now() - new Date(tx.created_at).getTime() < UNDO_WINDOW_MS)),
     [isAdmin, userId]
@@ -187,6 +199,8 @@ function MainApp({ profile, branch, userId, email }) {
     body = <LowStock allItems={allItems} branches={branches} onCancel={() => setOverlay(null)} />
   } else if (overlay?.kind === 'usage') {
     body = <DailyUsage branches={isAdmin ? branches : curBranch ? [curBranch] : []} onExit={() => setOverlay(null)} />
+  } else if (overlay?.kind === 'restock') {
+    body = <DailyUsage branches={isAdmin ? branches : curBranch ? [curBranch] : []} type="in" onExit={() => setOverlay(null)} />
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}
@@ -197,7 +211,8 @@ function MainApp({ profile, branch, userId, email }) {
         onIncoming={() => setOverlay({ kind: 'incoming' })}
         onLoans={() => setOverlay({ kind: 'loans' })}
         onRequests={() => setOverlay({ kind: 'requests' })}
-        onUsage={() => setOverlay({ kind: 'usage' })} />
+        onUsage={() => setOverlay({ kind: 'usage' })}
+        onRestock={() => setOverlay({ kind: 'restock' })} />
     )
   } else if (tab === 'stock') {
     body = (

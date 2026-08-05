@@ -1,9 +1,9 @@
 import { fmtDate, isLow } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
-export default function Home({ profile, branch, items, recent, incomingCount, loanCount, returningCount, requestCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onRequests, onUsage }) {
+export default function Home({ profile, branch, items, recent, incomingCount, loanCount, returningCount, requestCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onRequests, onUsage, onRestock }) {
   const { t, lang } = useT()
-  const lowCount = items.filter(isLow).length
+  const lowCount = items.filter((i) => i.catalog.active !== false).filter(isLow).length
   return (
     <div className="screen">
       <div>
@@ -58,7 +58,14 @@ export default function Home({ profile, branch, items, recent, incomingCount, lo
       <button className="btn-big btn-ghost-big" onClick={onRequests}>
         {t('home.requests')}{requestCount > 0 ? ` (${requestCount})` : ''}
       </button>
-      <button className="btn-big btn-ghost-big" onClick={onUsage}>{t('adm.usage')}</button>
+      <div className="row-2btn">
+        <button className="btn-big btn-ghost-big" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onUsage}>
+          {t('adm.usage')}
+        </button>
+        <button className="btn-big btn-ghost-big" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onRestock}>
+          {t('adm.restock')}
+        </button>
+      </div>
 
       <div>
         <p className="sub" style={{ marginBottom: 6 }}>{t('home.recent')}</p>

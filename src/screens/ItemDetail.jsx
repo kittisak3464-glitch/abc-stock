@@ -39,6 +39,8 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
     setAdjError('')
     if (diff === null || diff === 0) return setAdjError(t('item.adjustSame'))
     if (!reason.trim()) return setAdjError(t('item.adjustReasonReq'))
+    const sign = diff > 0 ? '+' : '−'
+    if (!window.confirm(t('item.adjustAsk', { sign, n: Math.abs(diff), u: item.catalog.unit }))) return
     setAdjBusy(true)
     try {
       await adjustBalance(item.id, Number(newBal), reason.trim())
@@ -89,7 +91,9 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
         )}
       </div>
 
-      {isAdmin ? (
+      {item.catalog.active === false ? (
+        <p className="sub">{t('item.inactiveNote')}</p>
+      ) : isAdmin ? (
         <div className="row-2btn">
           <button className="btn-big btn-in" onClick={() => onAction('in', item)}>{t('item.in')}</button>
           <button className="btn-big btn-out" onClick={() => onAction('out', item)}>{t('item.out')}</button>

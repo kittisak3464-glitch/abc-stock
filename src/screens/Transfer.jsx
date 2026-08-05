@@ -12,6 +12,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
   const [search, setSearch] = useState('')
   const [qty, setQty] = useState(1)
   const [note, setNote] = useState('')
+  const [email, setEmail] = useState(myEmail)
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -30,7 +31,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
     setBusy(true)
     setError('')
     try {
-      await signedRpc(myEmail, password, 'send_transfer', {
+      await signedRpc(email, password, 'send_transfer', {
         p_from_branch: fromId, p_to_branch: toId, p_catalog_id: item.catalog_id,
         p_qty: qty, p_note: note || null,
       })
@@ -44,6 +45,7 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
   const s = search.trim().toLowerCase()
   const pickList = items
     .filter((i) => Number(i.balance) > 0)
+    .filter((i) => i.catalog.active !== false)
     .filter((i) => !s || i.catalog.name.toLowerCase().includes(s))
 
   return (
@@ -108,10 +110,10 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
           </button>
 
           <div className="qtyrow">
-            <button className="qbtn" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
-            <input className="qnum" type="number" min="1" value={qty}
-              onChange={(e) => setQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))} />
-            <button className="qbtn" onClick={() => setQty(qty + 1)}>+</button>
+            <button className="qbtn" onClick={() => setQty(Math.max(1, Math.floor(qty) - 1))}>−</button>
+            <input className="qnum" type="number" min="0.01" step="any" value={qty}
+              onChange={(e) => setQty(Math.max(0.01, Number(e.target.value) || 1))} />
+            <button className="qbtn" onClick={() => setQty(Math.floor(qty) + 1)}>+</button>
           </div>
           {qty > Number(item.balance) && (
             <div className="alert-danger">{t('rec.notEnough', { n: Number(item.balance) })}</div>
@@ -119,6 +121,8 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
 
           <input className="input" placeholder={t('tr.note')} value={note}
             onChange={(e) => setNote(e.target.value)} />
+          <input className="input" type="email" value={email} autoComplete="username"
+            onChange={(e) => setEmail(e.target.value)} placeholder={t('inc.email')} />
           <input className="input" type="password" autoComplete="current-password"
             placeholder={t('tr.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
           {error && <div className="alert-danger">{error}</div>}

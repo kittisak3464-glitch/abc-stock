@@ -8,7 +8,7 @@ import DailyUsage from './DailyUsage'
 // Admin tab: catalog (locked names) + users + daily usage report
 export default function Admin({ branches, onChanged }) {
   const { t, lang } = useT()
-  const [view, setView] = useState('catalog') // catalog | users | usage
+  const [view, setView] = useState('catalog') // catalog | users | usage | restock
   const [cat, setCat] = useState([])
   const [profiles, setProfiles] = useState([])
   const [editId, setEditId] = useState(null)
@@ -73,6 +73,9 @@ export default function Admin({ branches, onChanged }) {
         </button>
         <button className={'chip' + (view === 'usage' ? ' chip-on' : '')} onClick={() => setView('usage')}>
           {t('adm.usage')}
+        </button>
+        <button className={'chip' + (view === 'restock' ? ' chip-on' : '')} onClick={() => setView('restock')}>
+          {t('adm.restock')}
         </button>
       </div>
       {msg && <div className="alert-ok" onClick={() => setMsg('')}>{msg}</div>}
@@ -186,6 +189,7 @@ export default function Admin({ branches, onChanged }) {
       )}
 
       {view === 'usage' && <DailyUsage branches={branches} />}
+      {view === 'restock' && <DailyUsage branches={branches} type="in" />}
     </div>
   )
 }

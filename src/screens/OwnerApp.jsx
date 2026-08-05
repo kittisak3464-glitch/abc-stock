@@ -23,10 +23,16 @@ export default function OwnerApp() {
   const [txs, setTxs] = useState(null)
   const [showUsage, setShowUsage] = useState(false)
   const [showRestock, setShowRestock] = useState(false)
+  const [loadError, setLoadError] = useState(false)
 
   useEffect(() => {
-    fetchBranches().then(setBranches)
-    fetchAllItems().then(setItems)
+    function load() {
+      fetchBranches().then(setBranches).catch(() => setLoadError(true))
+      fetchAllItems().then((d) => { setItems(d); setLoadError(false) }).catch(() => setLoadError(true))
+    }
+    load()
+    const id = setInterval(load, 60000)
+    return () => clearInterval(id)
   }, [])
 
   useEffect(() => {
@@ -35,7 +41,7 @@ export default function OwnerApp() {
     fetchTransactions({ itemId: item.id, limit: 40 }).then(setTxs).catch(() => setTxs([]))
   }, [item])
 
-  const lowCount = (bid) => items.filter((i) => i.branch_id === bid && isLow(i)).length
+  const lowCount = (bid) => items.filter((i) => i.branch_id === bid && i.catalog.active !== false && isLow(i)).length
 
   if (showUsage) {
     return (
@@ -103,7 +109,7 @@ export default function OwnerApp() {
 
   if (branch) {
     let list = items.filter((i) => i.branch_id === branch.id)
-    if (filter === 'low') list = list.filter(isLow)
+    if (filter === 'low') list = list.filter((i) => i.catalog.active !== false).filter(isLow)
     list = [...list].sort((a, b) => (isLow(a) ? 0 : 1) - (isLow(b) ? 0 : 1) || a.catalog.name.localeCompare(b.catalog.name))
     return (
       <div className="app-wrap">
@@ -150,6 +156,7 @@ export default function OwnerApp() {
               {t('own.today')} · {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
             </p>
           </div>
+          {loadError && <div className="alert-danger">{t('err.load')}</div>}
           {branches.map((b) => {
             const n = lowCount(b.id)
             return (

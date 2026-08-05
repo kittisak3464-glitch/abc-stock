@@ -125,10 +125,10 @@ export default function Request({ profile, branches, defaultTo, onDone, onCancel
           </button>
 
           <div className="qtyrow">
-            <button className="qbtn" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
-            <input className="qnum" type="number" min="1" value={qty}
-              onChange={(e) => setQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))} />
-            <button className="qbtn" onClick={() => setQty(qty + 1)}>+</button>
+            <button className="qbtn" onClick={() => setQty(Math.max(1, Math.floor(qty) - 1))}>−</button>
+            <input className="qnum" type="number" min="0.01" step="any" value={qty}
+              onChange={(e) => setQty(Math.max(0.01, Number(e.target.value) || 1))} />
+            <button className="qbtn" onClick={() => setQty(Math.floor(qty) + 1)}>+</button>
           </div>
 
           {overAsk && (

@@ -31,7 +31,7 @@ create table public.items (
   id            serial primary key,
   branch_id     int not null references public.branches (id),
   catalog_id    int not null references public.catalog (id),
-  balance       numeric not null default 0,
+  balance       numeric not null default 0 check (balance >= 0),
   reorder_point numeric,
   unique (branch_id, catalog_id)
 );
@@ -122,15 +122,15 @@ begin
   if tx.voided then
     raise exception 'Already undone';
   end if;
+  if tx.transfer_id is not null then
+    raise exception 'Transfer/loan entries cannot be undone here';
+  end if;
   if my_role() <> 'admin' then
     if tx.created_by is distinct from auth.uid() then
       raise exception 'You can only undo your own entry';
     end if;
     if tx.created_at < now() - interval '5 minutes' then
       raise exception 'Undo window (5 minutes) has passed — ask admin';
-    end if;
-    if tx.transfer_id is not null then
-      raise exception 'Transfer entries cannot be undone here';
     end if;
   end if;
   update transactions

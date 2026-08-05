@@ -31,6 +31,7 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
   if (!item) {
     const s = search.trim().toLowerCase()
     const list = items
+      .filter((i) => i.catalog.active !== false)
       .filter((i) => !s || i.catalog.name.toLowerCase().includes(s))
       .sort((a, b) => a.catalog.name.localeCompare(b.catalog.name))
     return (
@@ -77,10 +78,10 @@ export default function Record({ type, presetItem, items, userId, onDone, onCanc
 
       <p className="sub center" style={{ margin: 0 }}>{isIn ? t('rec.qtyIn') : t('rec.qtyOut')}</p>
       <div className="qtyrow">
-        <button className="qbtn" onClick={() => setQty(Math.max(1, qty - 1))}>−</button>
-        <input className="qnum" type="number" min="1" value={qty}
-          onChange={(e) => setQty(Math.max(1, Math.floor(Number(e.target.value) || 1)))} />
-        <button className="qbtn" onClick={() => setQty(qty + 1)}>+</button>
+        <button className="qbtn" onClick={() => setQty(Math.max(1, Math.floor(qty) - 1))}>−</button>
+        <input className="qnum" type="number" min="0.01" step="any" value={qty}
+          onChange={(e) => setQty(Math.max(0.01, Number(e.target.value) || 1))} />
+        <button className="qbtn" onClick={() => setQty(Math.floor(qty) + 1)}>+</button>
       </div>
 
       <input className="input" placeholder={t('rec.note')} value={note}

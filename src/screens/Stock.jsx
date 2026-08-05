@@ -34,13 +34,16 @@ export default function Stock({ items, filter, setFilter, onOpenItem }) {
       {list.length === 0 && <p className="sub">{t('stock.none')}</p>}
       {list.map((item) => (
         <button className={'item-row' + (isLow(item) ? ' item-low' : '')} key={item.id}
+          style={item.catalog.active === false ? { opacity: 0.5 } : undefined}
           onClick={() => onOpenItem(item)}>
           <span className="item-name">
             {item.catalog.name}
             {secondaryName(item.catalog, lang) && (
               <span className="item-secondary">{secondaryName(item.catalog, lang)}</span>
             )}
-            <span className="item-unit">{item.catalog.unit}</span>
+            <span className="item-unit">
+              {item.catalog.unit}{item.catalog.active === false ? ` · ${t('adm.inactive')}` : ''}
+            </span>
           </span>
           {isOut(item) ? (
             <span className="tag-low">{t('tag.out')}</span>

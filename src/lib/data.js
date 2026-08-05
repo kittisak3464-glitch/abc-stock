@@ -11,7 +11,7 @@ export function isOut(item) {
 export async function fetchItems(branchId) {
   const { data, error } = await supabase
     .from('items')
-    .select('id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit)')
+    .select('id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit, active)')
     .eq('branch_id', branchId)
     .order('catalog(name)')
   if (error) throw error
@@ -22,7 +22,7 @@ export async function fetchTransactions({ branchId, itemId, limit = 30 }) {
   let q = supabase
     .from('transactions')
     .select(
-      'id, type, qty, note, created_at, voided, created_by, ' +
+      'id, type, qty, note, created_at, voided, created_by, transfer_id, ' +
         'items!inner(id, branch_id, catalog(name, name_th, name_zh, name_my, unit)), ' +
         'author:profiles!transactions_created_by_fkey(display_name)'
     )
@@ -62,7 +62,7 @@ export async function fetchBranches() {
 export async function fetchAllItems() {
   const { data, error } = await supabase
     .from('items')
-    .select('id, branch_id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit)')
+    .select('id, branch_id, catalog_id, balance, reorder_point, catalog(name, name_th, name_zh, name_my, unit, active)')
     .limit(1000)
   if (error) throw error
   return (data ?? []).map((r) => ({ ...r, balance: Number(r.balance) }))

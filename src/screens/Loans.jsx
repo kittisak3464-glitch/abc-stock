@@ -6,26 +6,35 @@ import { secondaryName, useT } from '../lib/i18n'
 export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, myEmail, onDone, onCancel }) {
   const { t, lang } = useT()
   const [openId, setOpenId] = useState(null)
+  const [email, setEmail] = useState(myEmail)
   const [password, setPassword] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [branchFilter, setBranchFilter] = useState('all')
 
   const bname = (id) => branches.find((b) => b.id === id)?.name ?? '?'
+  const route = (borrower, lender) => (
+    <div className="loan-who">{t('loan.route', { a: '🏨 ' + bname(borrower), b: '🏨 ' + bname(lender) })}</div>
+  )
+  const inFilter = (tr) => branchFilter === 'all' || tr.from_branch === branchFilter || tr.to_branch === branchFilter
 
-  const returning = loans.filter((l) => l.status === 'return_in_transit')
-  const pending = loans.filter((l) => l.status === 'pending_return')
+  const loansF = isAdmin ? loans.filter(inFilter) : loans
+  const resolvedF = isAdmin ? resolved.filter(inFilter) : resolved
+  const returning = loansF.filter((l) => l.status === 'return_in_transit')
+  const pending = loansF.filter((l) => l.status === 'pending_return')
 
   function openForm(id) {
     setOpenId(id)
     setError('')
     setPassword('')
+    setEmail(myEmail)
   }
 
   async function sendBack(tr) {
     setBusy(true)
     setError('')
     try {
-      await signedRpc(myEmail, password, 'send_loan_return', { p_transfer_id: tr.id })
+      await signedRpc(email, password, 'send_loan_return', { p_transfer_id: tr.id })
       onDone(`${t('loan.sentBack')} ✓ ${tr.catalog.name} ×${tr.qty}`)
     } catch (e) {
       setError(e.message)
@@ -37,7 +46,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
     setBusy(true)
     setError('')
     try {
-      await signedRpc(myEmail, password, 'confirm_loan_return', { p_transfer_id: tr.id })
+      await signedRpc(email, password, 'confirm_loan_return', { p_transfer_id: tr.id })
       onDone(`${t('loan.returned')} ✓ ${tr.catalog.name} ×${tr.qty}`)
     } catch (e) {
       setError(e.message)
@@ -57,9 +66,23 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
     <div className="screen">
       <button className="btn-back" onClick={onCancel}>{t('back')}</button>
       <h1 className="h1 text-out">{t('loan.title')}</h1>
-      <p className="sub" style={{ margin: 0 }}>{t('loan.sub', { n: loans.length })}</p>
+      <p className="sub" style={{ margin: 0 }}>{t('loan.sub', { n: loansF.length })}</p>
 
-      {loans.length === 0 && <p className="sub">{t('loan.none')}</p>}
+      {isAdmin && branches.length > 1 && (
+        <div className="chiprow">
+          <button className={'chip' + (branchFilter === 'all' ? ' chip-on' : '')} onClick={() => setBranchFilter('all')}>
+            {t('stock.all')}
+          </button>
+          {branches.map((b) => (
+            <button key={b.id} className={'chip' + (branchFilter === b.id ? ' chip-on' : '')}
+              onClick={() => setBranchFilter(b.id)}>
+              {b.name}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {loansF.length === 0 && resolvedF.length === 0 && <p className="sub">{t('loan.none')}</p>}
 
       {returning.length > 0 && (
         <>
@@ -68,6 +91,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
             const canConfirm = isAdmin || myBranchId === tr.from_branch
             return (
               <div className="transit-card" key={tr.id}>
+                {route(tr.to_branch, tr.from_branch)}
                 <div className="transit-tag">{t('loan.returningTag')}</div>
                 <div className="transit-name">
                   {tr.catalog.name} × {tr.qty}
@@ -85,6 +109,8 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
                     </button>
                   ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 10 }}>
+                      <input className="input" type="email" value={email} autoComplete="username"
+                        onChange={(e) => setEmail(e.target.value)} placeholder={t('inc.email')} />
                       <input className="input" type="password" autoFocus autoComplete="current-password"
                         placeholder={t('loan.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
                       {error && <div className="alert-danger">{error}</div>}
@@ -115,7 +141,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
             const canSend = isAdmin || myBranchId === tr.to_branch
             return (
               <div className="loan-card" key={tr.id}>
-                <div className="loan-who">{t('loan.owes', { a: bname(tr.to_branch), b: bname(tr.from_branch) })}</div>
+                {route(tr.to_branch, tr.from_branch)}
                 <div className="loan-item">
                   {tr.catalog.name} × {tr.qty}
                   {secondaryName(tr.catalog, lang) && (
@@ -149,6 +175,8 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
                     <p className="sub" style={{ margin: 0 }}>
                       {t('loan.desc', { n: tr.qty, i: tr.catalog.name, a: bname(tr.to_branch), b: bname(tr.from_branch) })}
                     </p>
+                    <input className="input" type="email" value={email} autoComplete="username"
+                      onChange={(e) => setEmail(e.target.value)} placeholder={t('inc.email')} />
                     <input className="input" type="password" autoFocus autoComplete="current-password"
                       placeholder={t('loan.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
                     {error && <div className="alert-danger">{error}</div>}
@@ -169,17 +197,17 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
         </>
       )}
 
-      {resolved.length > 0 && (
+      {resolvedF.length > 0 && (
         <>
           <p className="sub" style={{ margin: '8px 0 0' }}>{t('loan.resolved')}</p>
-          {resolved.map((tr) => (
+          {resolvedF.map((tr) => (
             <div className="tx-row" key={tr.id}>
               <span className={'tx-ic ' + (tr.status === 'returned' ? 'tx-in' : 'tx-out')}>
                 {tr.status === 'returned' ? '↩' : '✕'}
               </span>
               <span className="tx-body">
                 <span className="tx-name">
-                  {bname(tr.to_branch)} → {bname(tr.from_branch)} · {tr.catalog.name} ×{tr.qty}
+                  {t('loan.route', { a: '🏨 ' + bname(tr.to_branch), b: '🏨 ' + bname(tr.from_branch) })} · {tr.catalog.name} ×{tr.qty}
                 </span>
                 <span className="tx-meta">{tr.status === 'returned' ? t('loan.returned') : t('loan.waived')}</span>
               </span>

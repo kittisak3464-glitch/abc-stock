@@ -3,7 +3,7 @@ import { secondaryName, useT } from '../lib/i18n'
 
 export default function LowStock({ allItems, branches, onCancel }) {
   const { t, lang } = useT()
-  const low = allItems.filter(isLow)
+  const low = allItems.filter((i) => i.catalog.active !== false).filter(isLow)
   const groups = [1, 2]
   const bname = (id) => branches.find((b) => b.id === id)?.name ?? '?'
   const bgroup = (id) => branches.find((b) => b.id === id)?.procurement_group

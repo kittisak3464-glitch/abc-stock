@@ -72,7 +72,7 @@ export async function fetchTransfers({ statuses, limit = 50 }) {
   let q = supabase
     .from('transfers')
     .select(
-      'id, from_branch, to_branch, qty, kind, status, note, sent_at, received_at, ' +
+      'id, from_branch, to_branch, catalog_id, qty, kind, status, note, sent_at, received_at, ' +
         'return_sent_at, return_received_at, ' +
         'requested_by, requested_at, decline_reason, ' +
         'catalog(name, name_th, name_zh, name_my, unit), ' +
@@ -122,6 +122,11 @@ export async function declineRequest(transferId, reason) {
 
 export async function cancelRequest(transferId) {
   const { error } = await supabase.rpc('cancel_request', { p_transfer_id: transferId })
+  if (error) throw error
+}
+
+export async function cancelTransfer(transferId) {
+  const { error } = await supabase.rpc('cancel_transfer', { p_transfer_id: transferId })
   if (error) throw error
 }
 

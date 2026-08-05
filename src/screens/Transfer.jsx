@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { fetchItems, isLow, signedRpc } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
-export default function Transfer({ profile, branches, myEmail, defaultFrom, onDone, onCancel }) {
+export default function Transfer({ profile, branches, myEmail, defaultFrom, transfers, onDone, onCancel }) {
   const { t, lang } = useT()
   const isAdmin = profile.role === 'admin'
   const [fromId, setFromId] = useState(defaultFrom)
@@ -25,6 +25,10 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
   const from = branches.find((b) => b.id === fromId)
   const to = branches.find((b) => b.id === toId)
   const crossGroup = from && to && from.procurement_group !== to.procurement_group
+  const duplicate = item && transfers?.find((tr) =>
+    ['requested', 'in_transit'].includes(tr.status) &&
+    tr.catalog_id === item.catalog_id && tr.from_branch === fromId && tr.to_branch === toId
+  )
 
   async function send() {
     if (!note.trim()) return setError(t('rec.noteReq'))
@@ -108,6 +112,12 @@ export default function Transfer({ profile, branches, myEmail, defaultFrom, onDo
             </span>
             <span className="item-bal">✓</span>
           </button>
+
+          {duplicate && (
+            <div className="alert-loan">
+              {t('dup.warn', { i: item.catalog.name, n: duplicate.qty, a: from?.name, b: to?.name })}
+            </div>
+          )}
 
           <div className="qtyrow">
             <button className="qbtn" onClick={() => setQty(Math.max(1, Math.floor(qty) - 1))}>−</button>

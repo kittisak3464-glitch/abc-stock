@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { fmtDate, signedRpc } from '../lib/data'
+import { cancelTransfer, fmtDate, signedRpc } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
-export default function Incoming({ transfers, branches, myEmail, onDone, onCancel }) {
+export default function Incoming({ transfers, outgoing, branches, myEmail, onDone, onCancel }) {
   const { t, lang } = useT()
   const [openId, setOpenId] = useState(null)
   const [email, setEmail] = useState(myEmail)
@@ -18,6 +18,18 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
     try {
       await signedRpc(email, password, 'receive_transfer', { p_transfer_id: tr.id })
       onDone(`✓ ${tr.catalog.name} +${tr.qty}`)
+    } catch (e) {
+      setError(e.message)
+      setBusy(false)
+    }
+  }
+
+  async function cancel(tr) {
+    if (!window.confirm(t('out.cancelAsk', { i: tr.catalog.name, n: tr.qty, b: bname(tr.to_branch) }))) return
+    setBusy(true)
+    try {
+      await cancelTransfer(tr.id)
+      onDone(`✕ ${t('out.cancelled')} — ${tr.catalog.name} ×${tr.qty}`)
     } catch (e) {
       setError(e.message)
       setBusy(false)
@@ -43,7 +55,7 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
           </div>
           {openId !== tr.id ? (
             <button className="btn-big btn-in" style={{ marginTop: 10 }}
-              onClick={() => { setOpenId(tr.id); setError(''); setPassword('') }}>
+              onClick={() => { setOpenId(tr.id); setError(''); setPassword(''); setEmail(myEmail) }}>
               {t('inc.open')}
             </button>
           ) : (
@@ -54,13 +66,36 @@ export default function Incoming({ transfers, branches, myEmail, onDone, onCance
                 placeholder={t('inc.pw')} value={password} onChange={(e) => setPassword(e.target.value)} />
               {error && <div className="alert-danger">{error}</div>}
               <button className="btn-big btn-in" disabled={busy || !password} onClick={() => receive(tr)}>
-                {busy ? t('inc.busy') : t('inc.btn', { n: tr.qty, i: tr.catalog.name })}
+                {t('inc.btn', { n: tr.qty, i: tr.catalog.name })}
               </button>
               <p className="sub center" style={{ margin: 0 }}>{t('inc.wait')}</p>
             </div>
           )}
         </div>
       ))}
+
+      {outgoing && (
+        <>
+          <p className="sub" style={{ margin: '8px 0 0', fontWeight: 700 }}>{t('out.title')}</p>
+          {outgoing.length === 0 && <p className="sub">{t('out.none')}</p>}
+          {outgoing.map((tr) => (
+            <div className="loan-card" key={tr.id}>
+              <div className="loan-who">🏨 {bname(tr.from_branch)} → 🏨 {bname(tr.to_branch)}</div>
+              <div className="loan-item">
+                {tr.catalog.name} × {tr.qty}
+                {secondaryName(tr.catalog, lang) && (
+                  <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(tr.catalog, lang)}</span>
+                )}
+              </div>
+              <div className="transit-meta">{t('out.sentAt', { d: fmtDate(tr.sent_at) })}{tr.note ? ` · ${tr.note}` : ''}</div>
+              <button className="btn-big btn-ghost-big" style={{ marginTop: 10, fontSize: '0.85rem', padding: 10 }}
+                disabled={busy} onClick={() => cancel(tr)}>
+                {t('out.cancel')}
+              </button>
+            </div>
+          ))}
+        </>
+      )}
     </div>
   )
 }

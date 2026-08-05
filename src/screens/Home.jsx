@@ -1,7 +1,7 @@
 import { fmtDate, isLow } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
-export default function Home({ profile, branch, items, recent, incomingCount, outgoingCount, loanCount, returningCount, requestCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onRequests, onUsage, onRestock }) {
+export default function Home({ profile, branch, items, recent, incomingCount, returningCount, requestCount, onAction, onGoLow, onTransfer, onIncoming, onLoans, onRequests, onUsage, onRestock }) {
   const { t, lang } = useT()
   const lowCount = items.filter((i) => i.catalog.active !== false).filter(isLow).length
   return (
@@ -52,15 +52,15 @@ export default function Home({ profile, branch, items, recent, incomingCount, ou
           {t('home.transfer')}
         </button>
         <button className="btn-big btn-ghost-big" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onLoans}>
-          {t('home.loans')}{loanCount > 0 ? ` (${loanCount})` : ''}
+          {t('home.loans')}
         </button>
       </div>
       <div className="row-2btn">
         <button className="btn-big btn-ghost-big" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onRequests}>
-          {t('home.requests')}{requestCount > 0 ? ` (${requestCount})` : ''}
+          {t('home.requests')}
         </button>
         <button className="btn-big btn-ghost-big" style={{ padding: 12, fontSize: '0.92rem' }} onClick={onIncoming}>
-          {t('home.incomingNav')}{outgoingCount > 0 ? ` (${outgoingCount})` : ''}
+          {t('home.incomingNav')}
         </button>
       </div>
       <div className="row-2btn">

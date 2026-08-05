@@ -205,7 +205,7 @@ function MainApp({ profile, branch, userId, email }) {
   } else if (tab === 'home') {
     body = (
       <Home profile={profile} branch={curBranch} items={items} recent={(txs ?? []).slice(0, 5)}
-        incomingCount={incoming.length} outgoingCount={outgoing.length} loanCount={loans.length} returningCount={returningCount} requestCount={requestsToFulfill.length}
+        incomingCount={incoming.length} returningCount={returningCount} requestCount={requestsToFulfill.length}
         onAction={(type) => setOverlay({ kind: 'record', type })}
         onGoLow={() => { if (isAdmin) setOverlay({ kind: 'lowstock' }); else { setStockFilter('low'); setTab('stock') } }}
         onTransfer={() => setOverlay({ kind: 'transfer' })}

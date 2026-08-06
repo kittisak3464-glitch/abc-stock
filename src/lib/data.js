@@ -1,4 +1,5 @@
 import { supabase } from './supabase'
+import { makeT } from './i18n'
 
 export function isLow(item) {
   return item.reorder_point != null && Number(item.balance) <= Number(item.reorder_point)
@@ -265,11 +266,11 @@ export async function updateProfile(userId, patch) {
   if (error) throw error
 }
 
-export function fmtDate(iso) {
+export function fmtDate(iso, lang = 'en') {
   const d = new Date(iso)
   const today = new Date()
   const sameDay = d.toDateString() === today.toDateString()
   const time = d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-  if (sameDay) return `Today ${time}`
+  if (sameDay) return `${makeT(lang)('today')} ${time}`
   return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ` ${time}`
 }

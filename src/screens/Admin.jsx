@@ -15,10 +15,11 @@ export default function Admin({ branches, onChanged }) {
   const [editVal, setEditVal] = useState({})
   const [newItem, setNewItem] = useState(null) // {name, unit, th, zh, my}
   const [msg, setMsg] = useState('')
+  const [err, setErr] = useState('')
 
   function reload() {
-    fetchCatalog().then(setCat).catch(() => setMsg(t('err.load')))
-    fetchProfiles().then(setProfiles).catch(() => setMsg(t('err.load')))
+    fetchCatalog().then(setCat).catch(() => { setMsg(''); setErr(t('err.load')) })
+    fetchProfiles().then(setProfiles).catch(() => { setMsg(''); setErr(t('err.load')) })
   }
   useEffect(reload, [])
 
@@ -31,13 +32,15 @@ export default function Admin({ branches, onChanged }) {
         name_zh: (editVal.name_zh ?? c.name_zh) || null,
         name_my: (editVal.name_my ?? c.name_my) || null,
       })
-      setEditId(null); setMsg(t('adm.saved')); reload(); onChanged()
-    } catch (e) { setMsg(e.message) }
+      setEditId(null); setErr(''); setMsg(t('adm.saved')); reload(); onChanged()
+    } catch (e) { setMsg(''); setErr(e.message) }
   }
 
   async function toggleActive(c) {
-    await updateCatalogItem(c.id, { active: !c.active })
-    reload(); onChanged()
+    try {
+      await updateCatalogItem(c.id, { active: !c.active })
+      setErr(''); reload(); onChanged()
+    } catch (e) { setMsg(''); setErr(e.message) }
   }
 
   async function addItem() {
@@ -45,8 +48,8 @@ export default function Admin({ branches, onChanged }) {
       await addCatalogItem(newItem.name.trim(), newItem.unit.trim() || 'Piece', branches.map((b) => b.id), {
         th: newItem.th?.trim(), zh: newItem.zh?.trim(), my: newItem.my?.trim(),
       })
-      setNewItem(null); setMsg(t('adm.added')); reload(); onChanged()
-    } catch (e) { setMsg(e.message) }
+      setNewItem(null); setErr(''); setMsg(t('adm.added')); reload(); onChanged()
+    } catch (e) { setMsg(''); setErr(e.message) }
   }
 
   async function saveProfile(p) {
@@ -55,8 +58,8 @@ export default function Admin({ branches, onChanged }) {
         display_name: editVal.display_name ?? p.display_name,
         branch_id: editVal.branch_id !== undefined ? editVal.branch_id : p.branch_id,
       })
-      setEditId(null); setMsg(t('adm.saved')); reload()
-    } catch (e) { setMsg(e.message) }
+      setEditId(null); setErr(''); setMsg(t('adm.saved')); reload()
+    } catch (e) { setMsg(''); setErr(e.message) }
   }
 
   const bname = (id) => branches.find((b) => b.id === id)?.name ?? '—'
@@ -79,6 +82,7 @@ export default function Admin({ branches, onChanged }) {
         </button>
       </div>
       {msg && <div className="alert-ok" onClick={() => setMsg('')}>{msg}</div>}
+      {err && <div className="alert-danger" onClick={() => setErr('')}>{err}</div>}
 
       {view === 'catalog' && (
         <>

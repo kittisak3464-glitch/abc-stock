@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { fetchDailyTransactions, fmtDate, todayBangkok } from '../lib/data'
 import { secondaryName, useT } from '../lib/i18n'
 
@@ -35,7 +35,7 @@ function ItemUsageDetail({ branchName, name, entries, onBack, type }) {
               <b className="tx-qty">{sign}{e.qty} {e.unit}</b>
             </span>
             <span className="tx-meta">
-              {fmtDate(e.time)} · {t('by')} {e.author ?? 'system'}
+              {fmtDate(e.time, lang)} · {t('by')} {e.author ?? 'system'}
             </span>
             {e.note && <span className="tx-note">📝 {e.note}</span>}
           </span>
@@ -52,6 +52,8 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
   const [msg, setMsg] = useState('')
   const [error, setError] = useState('')
   const [openItem, setOpenItem] = useState(null) // { branchId, branchName, name }
+  const tRef = useRef(t)
+  tRef.current = t
 
   const titleKey = type === 'in' ? 'restock.title' : 'usage.title'
   const noneKey = type === 'in' ? 'restock.none' : 'usage.none'
@@ -60,8 +62,8 @@ export default function DailyUsage({ branches, onExit, type = 'out' }) {
     setByBranch(null)
     setOpenItem(null)
     setError('')
-    fetchDailyTransactions(date, type).then(setByBranch).catch(() => setError(t('err.load')))
-  }, [date, type, t])
+    fetchDailyTransactions(date, type).then(setByBranch).catch(() => setError(tRef.current('err.load')))
+  }, [date, type])
 
   const dateLabel = new Date(`${date}T12:00:00+07:00`).toLocaleDateString('en-GB', {
     day: '2-digit', month: '2-digit', year: 'numeric',

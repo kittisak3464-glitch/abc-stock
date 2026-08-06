@@ -104,7 +104,7 @@ export default function Requests({ toFulfill, mine, branches, isAdmin, myEmail, 
             )}
           </div>
           <div className="transit-meta">
-            {t('reqs.meta', { p: tr.requester?.display_name ?? '?' })} · {fmtDate(tr.requested_at)}
+            {t('reqs.meta', { p: tr.requester?.display_name ?? '?' })} · {fmtDate(tr.requested_at, lang)}
             {tr.note ? ` · ${tr.note}` : ''}
           </div>
           {openId !== tr.id ? (
@@ -150,7 +150,7 @@ export default function Requests({ toFulfill, mine, branches, isAdmin, myEmail, 
               <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(tr.catalog, lang)}</span>
             )}
           </div>
-          <div className="transit-meta">{t('reqs.pending')} · {fmtDate(tr.requested_at)}</div>
+          <div className="transit-meta">{t('reqs.pending')} · {fmtDate(tr.requested_at, lang)}</div>
           <button className="btn-big btn-ghost-big" style={{ marginTop: 10, fontSize: '0.85rem', padding: 10 }}
             disabled={busy} onClick={() => cancel(tr)}>
             {t('reqs.cancel')}

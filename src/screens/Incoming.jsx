@@ -51,7 +51,7 @@ export default function Incoming({ transfers, outgoing, branches, myEmail, onDon
             )}
           </div>
           <div className="transit-meta">
-            {t('inc.meta', { b: bname(tr.from_branch), p: tr.sender?.display_name ?? '?' })} · {fmtDate(tr.sent_at)}
+            {t('inc.meta', { b: bname(tr.from_branch), p: tr.sender?.display_name ?? '?' })} · {fmtDate(tr.sent_at, lang)}
           </div>
           {openId !== tr.id ? (
             <button className="btn-big btn-in" style={{ marginTop: 10 }}
@@ -87,7 +87,7 @@ export default function Incoming({ transfers, outgoing, branches, myEmail, onDon
                   <span className="item-secondary" style={{ display: 'block' }}>{secondaryName(tr.catalog, lang)}</span>
                 )}
               </div>
-              <div className="transit-meta">{t('out.sentAt', { d: fmtDate(tr.sent_at) })}{tr.note ? ` · ${tr.note}` : ''}</div>
+              <div className="transit-meta">{t('out.sentAt', { d: fmtDate(tr.sent_at, lang) })}{tr.note ? ` · ${tr.note}` : ''}</div>
               <button className="btn-big btn-ghost-big" style={{ marginTop: 10, fontSize: '0.85rem', padding: 10 }}
                 disabled={busy} onClick={() => cancel(tr)}>
                 {t('out.cancel')}

@@ -350,11 +350,13 @@ export default function App() {
       userId={session.user.id} email={session.user.email} />
   )
 
+  const hasTabBar = profile && profile.role !== 'owner'
+
   return (
     <I18nContext.Provider value={i18n}>
       {content}
       {langSaveError && (
-        <div className="toast"><span>{i18n.t('app.langSaveError')}</span></div>
+        <div className={'toast' + (hasTabBar ? '' : ' toast-noBar')}><span>{i18n.t('app.langSaveError')}</span></div>
       )}
     </I18nContext.Provider>
   )

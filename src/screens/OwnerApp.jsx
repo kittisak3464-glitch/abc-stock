@@ -21,6 +21,7 @@ export default function OwnerApp() {
   const [filter, setFilter] = useState('all')
   const [item, setItem] = useState(null)
   const [txs, setTxs] = useState(null)
+  const [txsError, setTxsError] = useState(false)
   const [showUsage, setShowUsage] = useState(false)
   const [showRestock, setShowRestock] = useState(false)
   const [loadError, setLoadError] = useState(false)
@@ -38,7 +39,8 @@ export default function OwnerApp() {
   useEffect(() => {
     if (!item) return
     setTxs(null)
-    fetchTransactions({ itemId: item.id, limit: 40 }).then(setTxs).catch(() => setTxs([]))
+    setTxsError(false)
+    fetchTransactions({ itemId: item.id, limit: 40 }).then(setTxs).catch(() => setTxsError(true))
   }, [item])
 
   const lowCount = (bid) => items.filter((i) => i.branch_id === bid && i.catalog.active !== false && isLow(i)).length
@@ -84,7 +86,8 @@ export default function OwnerApp() {
               </b>
             </p>
             <p className="sub" style={{ margin: 0 }}>{t('item.history')}</p>
-            {txs === null && <p className="sub">…</p>}
+            {txsError && <div className="alert-danger">{t('err.load')}</div>}
+            {txs === null && !txsError && <p className="sub">…</p>}
             {txs?.filter((x) => !x.voided).map((tx) => (
               <div className="tx-row" key={tx.id}>
                 <span className={'tx-ic ' + (tx.type === 'in' ? 'tx-in' : 'tx-out')}>
@@ -95,7 +98,7 @@ export default function OwnerApp() {
                     {txLabel(t, tx)} <b className="tx-qty">{tx.type === 'in' ? '+' : '−'}{Number(tx.qty)}</b>
                   </span>
                   <span className="tx-meta">
-                    {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
+                    {fmtDate(tx.created_at, lang)} · {t('by')} {tx.author?.display_name ?? 'system'}
                   </span>
                 </span>
               </div>

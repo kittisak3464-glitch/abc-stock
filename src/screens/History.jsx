@@ -23,7 +23,7 @@ export default function History({ txs, canUndo, onUndo }) {
               <span className="item-secondary">{secondaryName(tx.items.catalog, lang)}</span>
             )}
             <span className="tx-meta">
-              {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
+              {fmtDate(tx.created_at, lang)} · {t('by')} {tx.author?.display_name ?? 'system'}
             </span>
             {tx.note && <span className="tx-note">📝 {tx.note}</span>}
           </span>

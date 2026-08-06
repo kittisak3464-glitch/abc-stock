@@ -6,6 +6,7 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
   const { t, lang } = useT()
   const sec = secondaryName(item.catalog, lang)
   const [txs, setTxs] = useState(null)
+  const [txsError, setTxsError] = useState(false)
   const [editRp, setEditRp] = useState(false)
   const [rp, setRp] = useState(item.reorder_point ?? '')
 
@@ -16,7 +17,9 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
   const [adjError, setAdjError] = useState('')
 
   useEffect(() => {
-    fetchTransactions({ itemId: item.id, limit: 50 }).then(setTxs).catch(() => setTxs([]))
+    setTxs(null)
+    setTxsError(false)
+    fetchTransactions({ itemId: item.id, limit: 50 }).then(setTxs).catch(() => setTxsError(true))
   }, [item.id])
 
   async function saveRp() {
@@ -137,7 +140,8 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
       )}
 
       <p className="sub" style={{ marginBottom: 0 }}>{t('item.history')}</p>
-      {txs === null && <p className="sub">{t('item.loading')}</p>}
+      {txsError && <div className="alert-danger">{t('err.load')}</div>}
+      {txs === null && !txsError && <p className="sub">{t('item.loading')}</p>}
       {txs?.length === 0 && <p className="sub">{t('item.none')}</p>}
       {txs?.map((tx) => (
         <div className={'tx-row' + (tx.voided ? ' tx-voided' : '')} key={tx.id}>
@@ -150,7 +154,7 @@ export default function ItemDetail({ item, isAdmin, onBack, onAction, canUndo, o
               {tx.voided && <span className="tag-voided">{t('tag.undone')}</span>}
             </span>
             <span className="tx-meta">
-              {fmtDate(tx.created_at)} · {t('by')} {tx.author?.display_name ?? 'system'}
+              {fmtDate(tx.created_at, lang)} · {t('by')} {tx.author?.display_name ?? 'system'}
             </span>
             {tx.note && <span className="tx-note">📝 {tx.note}</span>}
           </span>

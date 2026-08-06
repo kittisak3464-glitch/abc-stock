@@ -100,7 +100,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
                   )}
                 </div>
                 <div className="transit-meta">
-                  {t('inc.meta', { b: bname(tr.to_branch), p: tr.return_sender?.display_name ?? '?' })} · {fmtDate(tr.return_sent_at)}
+                  {t('inc.meta', { b: bname(tr.to_branch), p: tr.return_sender?.display_name ?? '?' })} · {fmtDate(tr.return_sent_at, lang)}
                 </div>
                 {canConfirm ? (
                   openId !== tr.id ? (
@@ -149,7 +149,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
                   )}
                 </div>
                 <div className="transit-meta">
-                  {tr.received_at ? t('loan.borrowed', { d: fmtDate(tr.received_at) }) : ''}
+                  {tr.received_at ? t('loan.borrowed', { d: fmtDate(tr.received_at, lang) }) : ''}
                   {tr.note ? ` · ${tr.note}` : ''}
                 </div>
                 {openId !== tr.id ? (

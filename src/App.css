@@ -611,6 +611,10 @@ button.stat { cursor: pointer; }
   white-space: nowrap;
 }
 
+.toast-noBar {
+  bottom: 20px;
+}
+
 .toast-undo {
   background: none;
   border: none;

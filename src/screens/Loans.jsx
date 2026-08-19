@@ -54,6 +54,14 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
     }
   }
 
+  async function cancelReturn(tr) {
+    if (!window.confirm(t('loan.cancelReturnAsk'))) return
+    setBusy(true)
+    const { error } = await supabase.rpc('cancel_loan_return', { p_transfer_id: tr.id })
+    if (error) { setError(error.message); setBusy(false) }
+    else onDone(`${t('loan.returnCancelled')} ✓ ${tr.catalog.name} ×${tr.qty}`)
+  }
+
   async function waive(tr) {
     if (!window.confirm(t('loan.ask', { b: bname(tr.to_branch), i: tr.catalog.name, n: tr.qty }))) return
     setBusy(true)
@@ -89,6 +97,7 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
           <p className="sub" style={{ margin: '8px 0 0', fontWeight: 700 }}>{t('loan.returningTitle')}</p>
           {returning.map((tr) => {
             const canConfirm = isAdmin || myBranchId === tr.from_branch
+            const canCancelReturn = isAdmin || myBranchId === tr.to_branch
             return (
               <div className="transit-card" key={tr.id}>
                 {route(tr.to_branch, tr.from_branch)}
@@ -127,6 +136,12 @@ export default function Loans({ loans, resolved, branches, isAdmin, myBranchId, 
                   )
                 ) : (
                   <p className="sub center" style={{ margin: '10px 0 0' }}>{t('loan.waitConfirm')}</p>
+                )}
+                {canCancelReturn && openId !== tr.id && (
+                  <button className="btn-big btn-ghost-big" style={{ marginTop: 8, fontSize: '0.8rem', padding: 8 }}
+                    disabled={busy} onClick={() => cancelReturn(tr)}>
+                    {t('loan.cancelReturnSend')}
+                  </button>
                 )}
               </div>
             )

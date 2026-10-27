@@ -221,7 +221,7 @@ function MainApp({ profile, branch, userId, email }) {
         onOpenItem={(item) => setOverlay({ kind: 'item', item })} />
     )
   } else if (tab === 'history') {
-    body = <History txs={txs} canUndo={canUndo} onUndo={handleUndo} />
+    body = <History branchId={branchId} txs={txs}canUndo={canUndo} onUndo={handleUndo} />
   } else if (tab === 'admin') {
     body = <Admin branches={branches} onChanged={reload} />
   } else {
